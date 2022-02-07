@@ -1,0 +1,39 @@
+﻿@using System.Net.Http
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+@using Microsoft.AspNetCore.WebUtilities
+@using Microsoft.JSInterop
+
+@using SolaProcurementV2.Server
+@using SolaProcurementV2.Server.Shared
+@using SolaProcurementV2.Server.Configurations
+@using SolaProcurementV2.Server.Data
+@using SolaProcurementV2.Server.DataModel
+@using SolaProcurementV2.Server.DataService
+@using SolaProcurementV2.Server.DataValidator
+@using SolaProcurementV2.Server.Identity
+@using SolaProcurementV2.Server.ComponentConfigurations
+@using SolaProcurementV2.Server.Shared.Components
+@using SolaProcurementV2.Server.Pages.Components
+
+@using MudBlazor
+@using Telerik.Blazor
+@using Telerik.Blazor.Components
+@using Telerik.DataSource
+@using Blazored.FluentValidation
+
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject SessionData SessionData
+@inject PageData PageData
+@inject StaticData StaticData
+@inject MenuService MenuService
+@inject BusinessUnitService BusinessUnitService
+@inject Images Images

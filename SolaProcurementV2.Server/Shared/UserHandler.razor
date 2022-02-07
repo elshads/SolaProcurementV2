@@ -1,0 +1,16 @@
+﻿@implements IAsyncDisposable
+@inject AppUserService AppUserService
+
+
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await AppUserService.SetUserActiveAsync(SessionData.SessionUser.Id);
+    }
+
+    async ValueTask IAsyncDisposable.DisposeAsync()
+    {
+        await AppUserService.SetUserInactiveAsync(SessionData.SessionUser.Id);
+    }
+}

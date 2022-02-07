@@ -1,0 +1,38 @@
+﻿@using Model = UserGroup
+@inject UserGroupService ModelService
+
+<TelerikGrid @ref="@gridRefModel" @key="@gridKeyModel" Data="@modelList" Height="@Height"
+                     Pageable="false" Sortable="true" Navigable="true" Groupable="false"
+                     FilterMode="@GridFilterMode.None" ShowColumnMenu="false" Resizable="true"
+                     SelectionMode="GridSelectionMode.None">
+            <GridToolBar>
+                <div>User Groups</div>
+            </GridToolBar>
+            <GridColumns>
+                <GridColumn Field="@(nameof(Model.Code))" Title="Code" />
+                <GridColumn Field="@(nameof(Model.Name))" Title="Name" />
+                <GridColumn Field="@(nameof(Model.Description))" Title="Description" />
+            </GridColumns>
+        </TelerikGrid>
+
+@code {
+    [CascadingParameter] public AppState AppState { get; set; }
+
+    [Parameter] public bool Enabled { get; set; } = true;
+    [Parameter] public string Height { get; set; } = "calc(100vh - 285px)";
+    [Parameter] public int UserId { get; set; } = 0;
+
+    TelerikGrid<Model> gridRefModel;
+    Guid gridKeyModel;
+
+    List<Model> modelList = new List<Model>();
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var _modelList = await ModelService.GetUserGroupAsync(UserId);
+        modelList = _modelList.Result.ToList();
+    }
+
+
+}

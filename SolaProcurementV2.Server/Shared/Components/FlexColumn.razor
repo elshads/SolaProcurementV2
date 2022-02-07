@@ -1,0 +1,83 @@
+﻿<div style="flex: 0 0 auto; width: calc(@Width - @margin); padding: @Padding; margin: @MarginTop @marginRight @MarginBottom @marginLeft;">
+    @ChildContent
+</div>
+
+
+@code {
+    [Parameter] public RenderFragment ChildContent { get; set; }
+    [Parameter] public int ColSpan { get; set; } = 0;
+    [Parameter] public string Width { get; set; } = "auto";
+    [Parameter] public int MarginLeft { get; set; } = 0;
+    [Parameter] public int MarginRight { get; set; } = 0;
+    [Parameter] public string MarginTop { get; set; } = "0";
+    [Parameter] public string MarginBottom { get; set; } = "0";
+    [Parameter] public string Padding { get; set; } = "0";
+
+    string margin = "0";
+    string marginLeft = "0";
+    string marginRight = "0";
+
+    protected override void OnInitialized()
+    {
+        margin = (MarginLeft + MarginRight).ToString() + "px";
+        marginLeft = MarginLeft.ToString() + "px";
+        marginRight = MarginRight.ToString() + "px";
+
+        switch (ColSpan)
+        {
+            case 0:
+                Width = Width;
+                break;
+            case 1:
+                Width = "8.33333333%";
+                break;
+            case 2:
+                Width = "16.66666667%";
+                break;
+            case 3:
+                Width = "25%";
+                break;
+            case 4:
+                Width = "33.33333333%";
+                break;
+            case 5:
+                Width = "41.66666667%";
+                break;
+            case 6:
+                Width = "50%";
+                break;
+            case 7:
+                Width = "58.33333333%";
+                break;
+            case 8:
+                Width = "66.66666667%";
+                break;
+            case 9:
+                Width = "75%";
+                break;
+            case 10:
+                Width = "83.33333333%";
+                break;
+            case 11:
+                Width = "91.66666667%";
+                break;
+            case 12:
+                Width = "100%";
+                break;
+            default:
+                Width = "auto";
+                break;
+        }
+    }
+
+}
+
+
+<style>
+    .flexcolumn {
+        flex: 0 0 auto;
+        width: calc(@Width - @margin);
+        padding: @Padding;
+        margin: @MarginTop @marginRight @MarginBottom @marginLeft;
+    }
+</style>

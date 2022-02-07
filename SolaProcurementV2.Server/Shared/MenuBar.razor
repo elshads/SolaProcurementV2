@@ -1,0 +1,235 @@
+﻿
+@if (AppState.Visible)
+{
+    <MudPaper Elevation="2">
+        <MudToolBar Class="toolbar">
+
+            @if (AppState.IsBackVisible)
+            {
+                <MudTooltip Text="Back" Duration="500">
+                    <MudIconButton Icon="@Icons.Filled.ArrowBack" Color="@buttonColor" Class="mr-5" Disabled="@AppState.IsBackDisabled" OnClick="@BackClick" />
+                </MudTooltip>
+            }
+            <div class="menu-item-divider"><MudDivider Vertical=true></MudDivider></div>
+            @if (AppState.IsAddVisible)
+            {
+                <MudTooltip Text="Add" Duration="500">
+                    <MudIconButton Icon="@Icons.Filled.Add" Color="@buttonColor" Class="mx-1" Disabled="@AppState.IsAddDisabled" OnClick="@AddClick" />
+                </MudTooltip>
+            }
+            @if (AppState.IsEditVisible)
+            {
+                <MudTooltip Text="Edit" Duration="500">
+                    <MudIconButton Icon="@Icons.Filled.Edit" Color="@buttonColor" Class="mx-1" Disabled="@AppState.IsEditDisabled" OnClick="@EditClick" />
+                </MudTooltip>
+            }
+            @if (AppState.IsSaveVisible)
+            {
+                <MudTooltip Text="Save" Duration="500">
+                    <MudIconButton Icon="@Icons.Filled.Save" Color="@buttonColor" Class="mx-1" Disabled="@AppState.IsSaveDisabled" OnClick="@SaveClick" />
+                </MudTooltip>
+            }
+            @if (AppState.IsDeleteVisible)
+            {
+                <MudTooltip Text="Delete" Duration="500">
+                    <MudIconButton Icon="@Icons.Filled.DeleteForever" Color="@buttonColor" Class="mx-1" Disabled="@AppState.IsDeleteDisabled" OnClick="@DeleteClick" />
+                </MudTooltip>
+            }
+            @if (AppState.IsRefreshVisible)
+            {
+                <MudTooltip Text="Refresh" Duration="500">
+                    <MudIconButton Icon="@Icons.Filled.Refresh" Color="@buttonColor" Class="mx-1" Disabled="@AppState.IsRefreshDisabled" OnClick="@RefreshClick" />
+                </MudTooltip>
+            }
+            <div class="menu-item-divider"><MudDivider Vertical=true></MudDivider></div>
+            <div class="mx-3"></div>
+            @if (AppState.IsReportsVisible)
+            {
+                <MudTooltip Text="Reports" Duration="500">
+                    <MudMenu Icon="@Icons.Filled.BarChart" Color="@buttonColor" Class="mx-1" Disabled="@AppState.IsReportsDisabled">
+                        <MudMenuItem>Summary Report</MudMenuItem>
+                        <MudMenuItem>Detailed Report</MudMenuItem>
+                        <MudMenuItem>Print form</MudMenuItem>
+                    </MudMenu>
+                </MudTooltip>
+            }
+            @if (AppState.IsAttachmentsVisible)
+            {
+                <MudTooltip Text="Attachments" Duration="500">
+                    <MudIconButton Icon="@Icons.Filled.AttachFile" Color="@buttonColor" Class="mx-1" Disabled="@AppState.IsAttachmentsDisabled" OnClick="@AttachmentsClick" />
+                </MudTooltip>
+            }
+            <div class="mx-3"></div>
+            @if (AppState.IsApprovalVisible)
+            {
+                <div class="menu-item-divider"><MudDivider Vertical=true></MudDivider></div>
+                <MudText Class="mx-2">Approval</MudText>
+                @if (AppState.IsApproveVisible)
+                {
+                    <MudTooltip Text="Approve" Duration="500">
+                        <MudIconButton Icon="@Icons.Filled.Check" Color="@Color.Success" Class="mx-1" Disabled="@AppState.IsApproveDisabled" OnClick="@ApproveClick" />
+                    </MudTooltip>
+                }
+                @if (AppState.IsSuspendVisible)
+                {
+                    <MudTooltip Text="Suspend" Duration="500">
+                        <MudIconButton Icon="@Icons.Filled.Pause" Color="@Color.Warning" Class="mx-1" Disabled="@AppState.IsSuspendDisabled" OnClick="@SuspendClick" />
+                    </MudTooltip>
+                }
+                @if (AppState.IsRejectVisible)
+                {
+                    <MudTooltip Text="Reject" Duration="500">
+                        <MudIconButton Icon="@Icons.Filled.Cancel" Color="@Color.Error" Class="mx-1" Disabled="@AppState.IsRejectDisabled" OnClick="@RejectClick" />
+                    </MudTooltip>
+                }
+                <div class="menu-item-divider"><MudDivider Vertical=true></MudDivider></div>
+            }
+
+            <MudSpacer />
+
+            @if (AppState.IsReportProblemVisible)
+            {
+                <MudTooltip Text="Report problem" Duration="500">
+                    <MudIconButton Icon="@Icons.Filled.ReportProblem" Color="@buttonColor" Class="mx-1" Disabled="@AppState.IsReportProblemDisabled" OnClick="@ReportProblemClick" />
+                </MudTooltip>
+            }
+            @if (AppState.IsDocumentationVisible)
+            {
+                <MudTooltip Text="Documentation" Duration="500">
+                    <MudIconButton Icon="@Icons.Filled.MenuBook" Color="@buttonColor" Class="mx-1" Disabled="@AppState.IsDocumentationDisabled" OnClick="@DocumentationClick" />
+                </MudTooltip>
+            }
+            @if (AppState.IsDevModeVisible)
+            {
+                <MudTooltip Text="DevMode" Duration="500">
+                    <MudIconButton Icon="@Icons.Filled.Code" Color="@buttonColor" Class="mx-1" Disabled="@AppState.IsDevModeDisabled" OnClick="@DevModeClick" />
+                </MudTooltip>
+            }
+            @if (AppState.IsPropertiesVisible)
+            {
+                <MudTooltip Text="Properties" Duration="500">
+                    <MudIconButton Icon="@Icons.Filled.MoreVert" Color="@buttonColor" Class="mx-1" Disabled="@AppState.IsPropertiesDisabled" OnClick="@PropertiesClick" />
+                </MudTooltip>
+            }
+
+        </MudToolBar>
+    </MudPaper>
+
+    <PropertiesBar Open="@propertiesOpen" PropertiesData="@AppState.PropertiesData"></PropertiesBar>
+
+    @*<MudOverlay Visible="@AppState.IsLoading" DarkBackground="true" ZIndex="9999">
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" Class="loader" />
+    </MudOverlay>*@
+}
+
+@code {
+    [CascadingParameter] public AppState AppState { get; set; }
+
+    bool propertiesOpen = false;
+    Color buttonColor = Color.Default;
+
+    
+    void AppStateChanged()
+    {
+        StateHasChanged();
+    }
+
+    void BackClick()
+    {
+        AppState.BackClick();
+    }
+
+    void AddClick()
+    {
+        AppState.AddClick();
+    }
+
+    void EditClick()
+    {
+        AppState.EditClick();
+    }
+
+    void SaveClick()
+    {
+        AppState.SaveClick();
+    }
+
+    void DeleteClick()
+    {
+        AppState.DeleteClick();
+    }
+
+    void RefreshClick()
+    {
+        AppState.RefreshClick();
+    }
+
+    void ReportsClick()
+    {
+        AppState.ReportsClick();
+    }
+
+    void AttachmentsClick()
+    {
+        AppState.AttachmentsClick();
+    }
+
+    void ApproveClick()
+    {
+        AppState.ApproveClick();
+    }
+
+    void SuspendClick()
+    {
+        AppState.SuspendClick();
+    }
+
+    void RejectClick()
+    {
+        AppState.RejectClick();
+    }
+
+    void ReportProblemClick()
+    {
+        AppState.ReportProblemClick();
+    }
+
+    void DocumentationClick()
+    {
+        AppState.DocumentationClick();
+    }
+
+    void DevModeClick()
+    {
+        AppState.DevModeClick();
+    }
+
+    void PropertiesClick()
+    {
+        propertiesOpen = !propertiesOpen;
+        AppState.PropertiesClick();
+    }
+
+}
+
+<style>
+    .menu-item {
+        display: flex;
+    }
+
+    .menu-item-divider {
+        height: 40px;
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+
+    .toolbar {
+        background: #fafafd;
+    }
+
+    .loader {
+        background: #fff;
+        padding: 6px;
+        border-radius: 50%;
+    }
+</style>

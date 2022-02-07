@@ -1,0 +1,10 @@
+﻿<MudDrawer @bind-Open="@Open" ClipMode="DrawerClipMode.Always" Variant="DrawerVariant.Responsive" Anchor="Anchor.End" Breakpoint="Breakpoint.Md" Elevation="2" Width="260px">
+    <MudContainer>
+
+    </MudContainer>
+</MudDrawer>
+
+@code {
+    [Parameter] public bool Open { get; set; } = false;
+    [Parameter] public PropertiesData PropertiesData { get; set; } = new();
+}

@@ -1,0 +1,80 @@
+﻿<MudCard Class="photo-container">
+    <MudCardMedia Image="@imageUrl" Height="@Height" Class="photo-control" />
+    <MudCardContent>
+        <MudText Typo="Typo.h6">@Title</MudText>
+    </MudCardContent>
+    <MudCardActions>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Filled.CloudUpload" HtmlTag="label" for="fileInput" Disabled="!Enabled">Upload File</MudButton>
+        <MudButton Variant="Variant.Text" Color="Color.Error" StartIcon="@Icons.Filled.Delete" Class="ml-4" Disabled="@(Photo == null || !Enabled)" OnClick="@Delete">Delete</MudButton>
+        <InputFile id="fileInput" OnChange="@UploadFiles" hidden @multiple="@Multiple" accept=".jpeg, .jpg, .png" />
+    </MudCardActions>
+</MudCard>
+
+
+@code {
+    [CascadingParameter] public AppState AppState { get; set; }
+
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public int Height { get; set; } = 300;
+    [Parameter] public int Width { get; set; } = 300;
+    [Parameter] public bool Multiple { get; set; } = false;
+    [Parameter] public bool Enabled { get; set; } = true;
+    [Parameter] public long AllowedFileSize { get; set; } = 20971520;
+    [Parameter] public EventCallback<byte[]> PhotoChanged { get; set; }
+    [Parameter]
+    public byte[] Photo
+    {
+        get { return photo; }
+        set { photo = value; imageUrl = (value != null? string.Format($"data:image/png;base64," + Convert.ToBase64String(Photo)) : Images.Placeholder); }
+    }
+    byte[] photo;
+    string imageUrl = "";
+
+    IReadOnlyList<IBrowserFile> files = new List<IBrowserFile>();
+    async Task UploadFiles(InputFileChangeEventArgs args)
+    {
+        files = args.GetMultipleFiles();
+        if (files.FirstOrDefault().Size < AllowedFileSize)
+        {
+            AppState.IsLoading = true;
+            if (files.Count > 0)
+            {
+                using (var ms = new MemoryStream())
+                {
+                    await files.FirstOrDefault().OpenReadStream(AllowedFileSize).CopyToAsync(ms);
+                    Photo = ms.ToArray();
+                }
+            }
+            await UpdateValues();
+            AppState.IsLoading = false;
+        }
+        else
+        {
+            AppState.ShowAlert($"File size exceeds {AllowedFileSize} bytes", Severity.Error);
+        }
+    }
+
+    async Task UpdateValues()
+    {
+        await PhotoChanged.InvokeAsync(Photo);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    async Task Delete()
+    {
+        Photo = null;
+        await UpdateValues();
+    }
+
+}
+
+
+<style>
+    .photo-container {
+        width: 300px;
+    }
+
+    .photo-control {
+        background-size: auto 100%;
+    }
+</style>

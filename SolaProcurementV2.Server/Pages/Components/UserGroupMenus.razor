@@ -1,0 +1,205 @@
+﻿@using Model = Menu
+@inject MenuService ModelService
+
+
+<TelerikTreeList @ref="@treeListRef"
+                 Data="@modelList"
+                 IdField="@(nameof(Model.Id))"
+                 ParentIdField="@(nameof(Model.ParentId))"
+                 Height="@Height"
+                 Navigable="true">
+    <TreeListSettings>
+
+    </TreeListSettings>
+    <TreeListColumns>
+        <TreeListColumn Field="@(nameof(Model.Id))" Title="Id" Width="60px" Editable="false"></TreeListColumn>
+        <TreeListColumn Field="@(nameof(Model.Code))" Title="Code" Expandable="true" Editable="false"></TreeListColumn>
+        <TreeListColumn Field="@(nameof(Model.Name))" Title="Name" Expandable="true" Editable="false"></TreeListColumn>
+        <TreeListColumn Field="@(nameof(Model.Url))" Title="Url" Editable="false"></TreeListColumn>
+        <TreeListColumn Field="@(nameof(Model.ReadAccess))" Title="Read" Width="74px" OnCellRender="@(e => e.Class = "cbx-center")">
+            <Template>
+                @{
+                    <TelerikCheckBox @bind-Value="(context as Model).ReadAccess" OnChange="@(e => UpdateModel(context as Model, (bool)e, "r"))" Enabled=@Enabled></TelerikCheckBox>
+                }
+            </Template>
+        </TreeListColumn>
+        <TreeListColumn Field="@(nameof(Model.CreateAccess))" Title="Create" Width="74px" OnCellRender="@(e => e.Class = "cbx-center")">
+            <Template>
+                @{
+                    <TelerikCheckBox @bind-Value="(context as Model).CreateAccess" OnChange="@(e => UpdateModel(context as Model, (bool)e, "c"))" Enabled=@Enabled></TelerikCheckBox>
+                }
+            </Template>
+        </TreeListColumn>
+        <TreeListColumn Field="@(nameof(Model.UpdateAccess))" Title="Update" Width="74px" OnCellRender="@(e => e.Class = "cbx-center")">
+            <Template>
+                @{
+                    <TelerikCheckBox @bind-Value="(context as Model).UpdateAccess" OnChange="@(e => UpdateModel(context as Model, (bool)e, "u"))" Enabled=@Enabled></TelerikCheckBox>
+                }
+            </Template>
+        </TreeListColumn>
+        <TreeListColumn Field="@(nameof(Model.DeleteAccess))" Title="Delete" Width="74px" OnCellRender="@(e => e.Class = "cbx-center")">
+            <Template>
+                @{
+                    <TelerikCheckBox @bind-Value="(context as Model).DeleteAccess" OnChange="@(e => UpdateModel(context as Model, (bool)e, "d"))" Enabled=@Enabled></TelerikCheckBox>
+                }
+            </Template>
+        </TreeListColumn>
+    </TreeListColumns>
+</TelerikTreeList>
+
+@code {
+    [CascadingParameter] public AppState AppState { get; set; }
+
+    [Parameter] public List<Menu> Data { get; set; } = new();
+    [Parameter] public EventCallback<List<Menu>> DataChanged { get; set; }
+    [Parameter] public bool Enabled { get; set; } = true;
+    [Parameter] public string Height { get; set; } = "calc(100vh - 285px)";
+
+    TelerikTreeList<Model> treeListRef;
+    List<Menu> modelList = new();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        AppState.IsLoading = true;
+        var _modelList = await ModelService.GetAllAsync(0, false);
+        modelList = _modelList.Result.ToList();
+
+        var idList = modelList.Select(e => e.Id);
+        foreach (var item in Data)
+        {
+            if (idList.Contains(item.Id))
+            {
+                var index = modelList.FindIndex(e => e.Id == item.Id);
+                modelList[index].CreateAccess = item.CreateAccess;
+                modelList[index].ReadAccess = item.ReadAccess;
+                modelList[index].UpdateAccess = item.UpdateAccess;
+                modelList[index].DeleteAccess = item.DeleteAccess;
+            }
+        }
+        await SetTreeListExpandedItems();
+        AppState.IsLoading = false;
+    }
+
+    //protected override async Task OnParametersSetAsync()
+    //{
+        
+    //}
+
+    async Task UpdateModel(Model model, bool value, string type)
+    {
+        //var modelIndex = modelList.FindIndex(e => e.Id == model.Id);
+        if (model.ParentId == null)
+        {
+            var children = modelList.Where(e => e.ParentId == model.Id);
+            if (children != null && children.Count() > 0)
+            {
+                foreach (var item in children)
+                {
+                    var childIndex = modelList.FindIndex(e => e.Id == item.Id);
+                    switch (type)
+                    {
+                        case "c":
+                            modelList[childIndex].CreateAccess = model.CreateAccess;
+                            break;
+                        case "r":
+                            modelList[childIndex].ReadAccess = model.ReadAccess;
+                            break;
+                        case "u":
+                            modelList[childIndex].UpdateAccess = model.UpdateAccess;
+                            break;
+                        case "d":
+                            modelList[childIndex].DeleteAccess = model.DeleteAccess;
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+        }
+        else
+        {
+            var parentIndex = modelList.FindIndex(e => e.Id == model.ParentId);
+            var sibilings = modelList.Where(e => e.ParentId == model.ParentId);
+            var anyTrue = false;
+
+            switch (type)
+            {
+                case "c":
+                    anyTrue = sibilings.Any(e => e.CreateAccess == true);
+                    break;
+                case "r":
+                    anyTrue = sibilings.Any(e => e.ReadAccess == true);
+                    break;
+                case "u":
+                    anyTrue = sibilings.Any(e => e.UpdateAccess == true);
+                    break;
+                case "d":
+                    anyTrue = sibilings.Any(e => e.DeleteAccess == true);
+                    break;
+                default:
+                    break;
+            }
+
+            if (anyTrue)
+            {
+                switch (type)
+                {
+                    case "c":
+                        modelList[parentIndex].CreateAccess = true;
+                        break;
+                    case "r":
+                        modelList[parentIndex].ReadAccess = true;
+                        break;
+                    case "u":
+                        modelList[parentIndex].UpdateAccess = true;
+                        break;
+                    case "d":
+                        modelList[parentIndex].DeleteAccess = true;
+                        break;
+                    default:
+                        break;
+                }
+            }
+            else
+            {
+                switch (type)
+                {
+                    case "c":
+                        modelList[parentIndex].CreateAccess = false;
+                        break;
+                    case "r":
+                        modelList[parentIndex].ReadAccess = false;
+                        break;
+                    case "u":
+                        modelList[parentIndex].UpdateAccess = false;
+                        break;
+                    case "d":
+                        modelList[parentIndex].DeleteAccess = false;
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+
+        Data = modelList.Where(e => e.ReadAccess).ToList();
+        await DataChanged.InvokeAsync(Data);
+    }
+
+    async Task SetTreeListExpandedItems()
+    {
+        var expandedState = new TreeListState<Model>()
+            {
+                ExpandedItems = new List<Model>(modelList)
+            };
+        await treeListRef.SetState(expandedState);
+    }
+
+}
+
+<style>
+    .cbx-center {
+        text-align: center !important;
+    }
+</style>

@@ -1,0 +1,19 @@
+﻿<div class="flexbox">
+    @ChildContent
+</div>
+
+
+@code {
+    [Parameter] public RenderFragment ChildContent { get; set; }
+}
+
+
+<style>
+    .flexbox {
+        display: flex;
+        flex-wrap: wrap;
+        flex-shrink: 0;
+        width: 100%;
+        max-width: 100%;
+    }
+</style>

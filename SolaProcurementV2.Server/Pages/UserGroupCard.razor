@@ -1,0 +1,343 @@
+﻿@page "/usergroupcard"
+@implements IDisposable
+
+@inject UserGroupService ModelService
+@using Model = UserGroup
+
+
+<TelerikForm EditContext="@formEditContext" Columns="2" ColumnSpacing="16px">
+    <FormValidation>
+        <FluentValidationValidator DisableAssemblyScanning="true"/>
+    </FormValidation>
+    <FormItems>
+        @if (devMode)
+        {
+            <FormItem>
+                <Template>
+                    <label for="ugid" class="k-label k-form-label">Id</label>
+                    <TelerikNumericTextBox Id="ugid" Enabled="false" Arrows="false" @bind-Value="@(currentModel.Id)"></TelerikNumericTextBox>
+                </Template>
+            </FormItem>
+        }
+
+        <FormItem>
+            <Template>
+                <label for="ugcode" class="k-label k-form-label">Code</label>
+                <TelerikTextBox Id="ugcode" @bind-Value="@(currentModel.Code)" Enabled="@(PageData.Menu.CreateAccess && currentModel.Id == 0)"></TelerikTextBox>
+                <TelerikValidationMessage For="@(() => currentModel.Code)"></TelerikValidationMessage>
+            </Template>
+        </FormItem>
+
+        <FormItem>
+            <Template>
+                <label for="ugname" class="k-label k-form-label">Name</label>
+                <TelerikTextBox Id="ugname" @bind-Value="@(currentModel.Name)" Enabled="@((PageData.Menu.CreateAccess && currentModel.Id == 0) || (PageData.Menu.UpdateAccess && currentModel.Id > 0))"></TelerikTextBox>
+                <TelerikValidationMessage For="@(() => currentModel.Name)"></TelerikValidationMessage>
+            </Template>
+        </FormItem>
+    </FormItems>
+    <FormButtons>
+    </FormButtons>
+</TelerikForm>
+<TelerikTabStrip @bind-ActiveTabIndex="@activeTabIndex">
+    <TabStripTab Title="Users">
+        <UserGroupAppUsers @bind-Data="currentModel.AppUserList" Enabled="@((PageData.Menu.CreateAccess && currentModel. Id == 0) || (PageData.Menu.UpdateAccess && currentModel. Id > 0))" Height="calc(100vh - 285px)"></UserGroupAppUsers>
+    </TabStripTab>
+    <TabStripTab Title="Business Units">
+        <UserGroupBusinessUnits @bind-Data="currentModel.BusinessUnitList" Enabled="@((PageData.Menu.CreateAccess && currentModel. Id == 0) || (PageData.Menu.UpdateAccess && currentModel. Id > 0))" Height="calc(100vh - 285px)"></UserGroupBusinessUnits>
+    </TabStripTab>
+    <TabStripTab Title="Menus">
+        <UserGroupMenus @bind-Data="currentModel.MenuList" Enabled="@((PageData.Menu.CreateAccess && currentModel. Id == 0) || (PageData.Menu.UpdateAccess && currentModel. Id > 0))" Height="calc(100vh - 285px)"></UserGroupMenus>
+    </TabStripTab>
+    <TabStripTab Title="Approve Roles">
+        <div>Approve Roles</div>
+    </TabStripTab>
+</TelerikTabStrip>
+
+
+@code {
+    int menuId = 1111;
+    string pageTitle = "User Group";
+
+    [CascadingParameter] public AppState AppState { get; set; }
+    [CascadingParameter] public DialogFactory Dialogs { get; set; }
+
+
+    int activeTabIndex = 0;
+    bool devMode = false;
+
+    // Page specific variables - start
+    Model currentModel = new();
+    EditContext formEditContext = new(new Model());
+    IEnumerable<Status> statusList = new List<Status>();
+    Status selectedStatus = new();
+    // Page specific variables - end
+
+
+
+    IEnumerable<BusinessUnit> selectedGroupBusinessUnitList = new List<BusinessUnit>();
+    IEnumerable<BusinessUnit> selectedBusinessUnitList = new List<BusinessUnit>();
+    List<BusinessUnit> businessUnitList = new List<BusinessUnit>();
+
+    IEnumerable<ApproveRole> selectedGroupApproveRoleList = new List<ApproveRole>();
+    IEnumerable<ApproveRole> selectedApproveRoleList = new List<ApproveRole>();
+    List<ApproveRole> approveRoleList = new List<ApproveRole>();
+
+    IEnumerable<Menu> selectedGroupMenuList = new List<Menu>();
+    IEnumerable<Menu> selectedMenuList = new List<Menu>();
+    List<Menu> menuList = new List<Menu>();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await FillDefaultData();
+        AppStateInitialize();
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (!(PageData.Menu.ReadAccess))
+            {
+                NavigationManager.NavigateTo("/notfound");
+            }
+        }
+    }
+
+    async Task FillDefaultData()
+    {
+        AppState.IsLoading = true;
+        PageData.GetAccessLevel(menuId);
+
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+
+        var _businessUnitId = 0;
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("bu", out var _bu))
+        {
+            _businessUnitId = Convert.ToInt32(_bu);
+        }
+
+        var _modelId = 0;
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("id", out var _id))
+        {
+            _modelId = Convert.ToInt32(_id);
+        }
+
+        var _modelCode = "";
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("code", out var _code))
+        {
+            _modelCode = _code;
+        }
+
+        await FillData(_modelId);
+        AppState.IsLoading = false;
+    }
+
+    async Task FillData(int _modelId)
+    {
+        AppState.IsLoading = true;
+        var _currentModel = await ModelService.GetByIdAsync(_modelId);
+        currentModel = (_currentModel != null && _currentModel.Id > 0 ? _currentModel : new());
+        formEditContext = new EditContext(currentModel);
+        AppState.IsLoading = false;
+    }
+
+    void AppStateInitialize()
+    {
+        AppState.OnBackClick += BackClick;
+        AppState.OnAddClick += AddClick;
+        AppState.OnEditClick += EditClick;
+        AppState.OnSaveClick += SaveClick;
+        AppState.OnDeleteClick += DeleteClick;
+        AppState.OnRefreshClick += RefreshClick;
+        AppState.OnReportsClick += ReportsClick;
+        AppState.OnAttachmentsClick += AttachmentsClick;
+        AppState.OnApproveClick += ApproveClick;
+        AppState.OnSuspendClick += SuspendClick;
+        AppState.OnRejectClick += RejectClick;
+        AppState.OnReportProblemClick += ReportProblemClick;
+        AppState.OnDocumentationClick += DocumentationClick;
+        AppState.OnDevModeClick += DevModeClick;
+        AppState.OnPropertiesClick += PropertiesClick;
+
+
+        AppState.IsAddVisible = false;
+        AppState.IsSaveVisible = true;
+        AppState.IsSaveDisabled = !(PageData.Menu.CreateAccess || PageData.Menu.UpdateAccess);
+        AppState.IsDeleteVisible = true;
+        AppState.IsDeleteDisabled = (!PageData.Menu.DeleteAccess || currentModel.Id == 0);
+    }
+
+    void IDisposable.Dispose()
+    {
+        AppState.OnBackClick -= BackClick;
+        AppState.OnAddClick -= AddClick;
+        AppState.OnEditClick -= EditClick;
+        AppState.OnSaveClick -= SaveClick;
+        AppState.OnDeleteClick -= DeleteClick;
+        AppState.OnRefreshClick -= RefreshClick;
+        AppState.OnReportsClick -= ReportsClick;
+        AppState.OnAttachmentsClick -= AttachmentsClick;
+        AppState.OnApproveClick -= ApproveClick;
+        AppState.OnSuspendClick -= SuspendClick;
+        AppState.OnRejectClick -= RejectClick;
+        AppState.OnReportProblemClick -= ReportProblemClick;
+        AppState.OnDocumentationClick -= DocumentationClick;
+        AppState.OnDevModeClick -= DevModeClick;
+        AppState.OnPropertiesClick -= PropertiesClick;
+    }
+
+    void ShowProperties(PropertiesData propertiesData)
+    {
+        AppState.PropertiesData = propertiesData;
+    }
+
+    void BackClick()
+    {
+        NavigationManager.NavigateTo("/usergroups");
+    }
+
+    void AddClick()
+    {
+        //
+    }
+
+    void EditClick()
+    {
+        //
+    }
+
+    async void SaveClick()
+    {
+        await ValidateForm(formEditContext);
+    }
+
+    async void DeleteClick()
+    {
+        var isConfirmed = await Dialogs.ConfirmAsync($"Are you sure you want to delete a record?", "Delete!");
+
+        if (isConfirmed)
+        {
+            var result = await ModelService.DeleteAsync(currentModel.Id);
+            if (result.DeletedResult > 0)
+            {
+                AppState.ShowAlert($"A record with Id {currentModel.Id} successfully deleted", Severity.Success);
+                NavigationManager.NavigateTo("/usergroups");
+            }
+            else
+            {
+                AppState.ShowAlert(result.DeletedResultMessage, Severity.Error);
+            }
+        }
+    }
+
+    void RefreshClick()
+    {
+        //
+    }
+
+    void ReportsClick()
+    {
+        //
+    }
+
+    void AttachmentsClick()
+    {
+        //
+    }
+
+    void ApproveClick()
+    {
+        //
+    }
+
+    void SuspendClick()
+    {
+        //
+    }
+
+    void RejectClick()
+    {
+        //
+    }
+
+    void ReportProblemClick()
+    {
+        //
+    }
+
+    void DocumentationClick()
+    {
+        //
+    }
+
+    void DevModeClick()
+    {
+        devMode = !devMode;
+        StateHasChanged();
+    }
+
+    void PropertiesClick()
+    {
+        //
+    }
+
+    async Task ValidateForm(EditContext editContext)
+    {
+        var model = editContext.Model as Model;
+        var isValid = editContext.Validate();
+
+        if (isValid)
+        {
+            if (model.Id > 0)
+            {
+                await Update(model);
+            }
+            else
+            {
+                await Create(model);
+            }
+        }
+        else
+        {
+            AppState.ShowAlert("Please correct the errors and try again", Severity.Error);
+        }
+    }
+
+    async Task Create(Model model)
+    {
+        AppState.IsLoading = true;
+        var result = await ModelService.CreateAsync(model, SessionData.SessionUser.Id);
+        AppState.IsLoading = false;
+
+        if (result.InsertedResult > 0)
+        {
+            var newGroup = await ModelService.GetByCodeAsync(model.Code);
+            AppState.ShowAlert($"User group with id {newGroup.Id} successfully created", Severity.Success, () => NavigationManager.NavigateTo($"/usergroupcard?id={newGroup.Id}"));
+            NavigationManager.NavigateTo($"/usergroups");
+        }
+        else
+        {
+            AppState.ShowAlert(result.InsertedResultMessage, Severity.Error);
+        }
+    }
+
+    async Task Update(Model model)
+    {
+        AppState.IsLoading = true;
+        var result = await ModelService.UpdateAsync(model, SessionData.SessionUser.Id);
+        AppState.IsLoading = false;
+
+        if (result.UpdatedResult > 0)
+        {
+            AppState.ShowAlert($"User group with id {model.Id} successfully updated", Severity.Success, () => NavigationManager.NavigateTo($"/usergroupcard?id={model.Id}"));
+            NavigationManager.NavigateTo($"/usergroups");
+        }
+        else
+        {
+            AppState.ShowAlert(result.UpdatedResultMessage, Severity.Error);
+        }
+    }
+
+}

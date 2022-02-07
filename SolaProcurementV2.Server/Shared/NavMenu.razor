@@ -1,0 +1,137 @@
+﻿@inject MenuService MenuService
+
+<MudNavMenu>
+    <div class="nav-header">
+        <MudIcon Class="header-color" Icon="@LogoIcon" Title="GitHub" />
+        @if (Open)
+        {
+            <MudText Typo="Typo.h6" Class="px-4 text-nowrap header-color">@Title</MudText>
+        }
+    </div>
+    <MudDivider />
+    <MudNavLink Class="text-nowrap" Match="NavLinkMatch.All" Icon="@Icons.Filled.Home" Href="/" >Home</MudNavLink>
+    @if (MenuList != null && MenuList.Count() > 0)
+    {
+        @foreach (var parent in MenuList)
+        {
+            @if (parent.Children != null && parent.Children.Count() > 0)
+            {
+                <MudNavGroup Class="text-nowrap" Icon="@parent.Icon" Title="@parent.Name">
+
+                    @foreach (var child1 in parent.Children)
+                    {
+                        @if (child1.Children != null && child1.Children.Count() > 0)
+                        {
+                            <MudNavGroup Class="text-nowrap" Icon="@child1.Icon" Title="@child1.Name">
+                                @foreach (var child2 in child1.Children)
+                                {
+                                    @if (child2.Children != null && child2.Children.Count() > 0)
+                                    {
+                                        <MudNavGroup Class="text-nowrap" Icon="@child2.Icon" Title="@child2.Name">
+                                            @foreach (var child3 in child2.Children)
+                                            {
+                                                <MudNavLink Class="text-nowrap" Match="NavLinkMatch.All" Icon="@child3.Icon" Href="@child3.Url" >@child3.Name</MudNavLink>
+                                            }
+                                        </MudNavGroup>
+                                    }
+                                    else
+                                    {
+                                        <MudNavLink Class="text-nowrap" Match="NavLinkMatch.All" Icon="@child2.Icon" Href="@child2.Url" >@child2.Name</MudNavLink>
+                                    }
+                                }
+                            </MudNavGroup>
+                        }
+                        else
+                        {
+                            <MudNavLink Class="text-nowrap" Match="NavLinkMatch.All" Icon="@child1.Icon" Href="@child1.Url" >@child1.Name</MudNavLink>
+                        }
+                    }
+                </MudNavGroup>
+            }
+            else
+            {
+                <MudNavLink Class="text-nowrap" Match="NavLinkMatch.All" Icon="@parent.Icon" Href="@parent.Url" >@parent.Name</MudNavLink>
+            }
+        }
+        <div style="height: 64px;"></div>
+    }
+</MudNavMenu>
+
+
+
+@code {
+    [Parameter] public IEnumerable<Menu> MenuList { get; set; }
+    [Parameter] public bool Open { get; set; }
+    [Parameter] public string Title { get; set; } = "Sola Procurement";
+    [Parameter] public string LogoIcon { get; set; } = Icons.Filled.AllInclusive;
+    [Parameter] public string FontColor { get; set; } = "#424242";
+    [Parameter] public string ActiveFontColor { get; set; } = "#594ae2";
+    [Parameter] public string ActiveBackground { get; set; } = "#e2e3e5";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await FillData();
+    }
+
+    async Task FillData()
+    {
+        var menuList = await MenuService.GetHierarchy(SessionData.SessionUser);
+        MenuList = menuList.Result;
+    }
+
+}
+
+<style>
+    a {
+        text-decoration: none;
+    }
+
+
+    .mud-nav-link {
+        color: @FontColor;
+        line-height: 1.75;
+        padding: 10px 16px 10px 16px;
+        min-height: 46px;
+        align-items: center;
+    }
+
+        .mud-nav-link:hover:not(.mud-nav-link-disabled) {
+            color: @ActiveFontColor;
+            background-color: @ActiveBackground;
+        }
+
+        .mud-nav-link.active:not(.mud-nav-link-disabled) {
+            color: @ActiveFontColor;
+            background-color: @ActiveBackground;
+        }
+
+    .mud-nav-link-icon.mud-nav-link-icon-default {
+        color: @FontColor !important;
+    }
+
+    .mud-nav-link .mud-nav-link-expand-icon {
+        color: @FontColor;
+    }
+
+        .mud-nav-link .mud-nav-link-expand-icon.mud-transform {
+            fill: @ActiveFontColor;
+        }
+
+    .nav-header {
+        height: 64px;
+        display: flex;
+        padding: 1rem;
+        align-items: center;
+    }
+
+    .header-color {
+        color: @FontColor;
+    }
+
+    .text-nowrap {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+</style>

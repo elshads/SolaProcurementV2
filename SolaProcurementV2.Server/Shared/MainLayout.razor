@@ -1,0 +1,228 @@
+﻿@layout TelerikLayout
+@inherits LayoutComponentBase
+@implements IDisposable
+@inject ThemeService ThemeService
+@inject AppUserService AppUserService
+
+
+<MudThemeProvider />
+<MudSnackbarProvider />
+<MudDialogProvider FullWidth="false"
+                   MaxWidth="MaxWidth.Large"
+                   CloseButton="true"
+                   DisableBackdropClick="true"
+                   NoHeader="false"
+                   Position="DialogPosition.Center" />
+
+
+<AuthorizeView>
+    <Authorized>
+        <MudLayout>
+            <AppBar @bind-Open="@openDrawer" />
+            <MudDrawer Class="drawer" @bind-Open="@openDrawer" ClipMode="DrawerClipMode.Always" Variant="DrawerVariant.Mini" Anchor="Anchor.Start" Breakpoint="Breakpoint.Md" Elevation="2" Width="260px" MiniWidth="64px">
+                <NavMenu Open="@openDrawer" FontColor="@currentTheme.NavFontColor" ActiveFontColor="@currentTheme.NavActiveFontColor" ActiveBackground="@currentTheme.NavActiveBackground"></NavMenu>
+                <div class="nav-footer">
+                    <MudIconButton Icon="@Icons.Filled.LightMode" Class="light-switcher" OnClick="@ChangeTheme" />
+                    @if (openDrawer)
+                    {
+                        <MudText Class="px-4 text-nowrap footer-color">Switch theme</MudText>
+                    }
+                </div>
+            </MudDrawer>
+            <MudMainContent>
+                <CascadingValue Value="appState">
+                    <MenuBar />
+                    <div class="body-content">
+                        <PageContainer>
+                            @Body
+                        </PageContainer>
+                    </div>
+                    <MudOverlay Visible="@appState.IsLoading" DarkBackground="true" ZIndex="9999">
+                        <MudProgressCircular Color="Color.Primary" Indeterminate="true" Class="loader" />
+                    </MudOverlay>
+                </CascadingValue>
+            </MudMainContent>
+        </MudLayout>
+        <UserHandler />
+    </Authorized>
+    <NotAuthorized>
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+    </NotAuthorized>
+</AuthorizeView>
+
+
+
+@code {
+    AppState appState;
+
+    Theme currentTheme = new Theme();
+    bool openDrawer = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        appState = new AppState(Snackbar);
+        appState.OnAppStateChanged += AppStateChanged;
+        await GetTheme(SessionData.SessionUser.ThemeId);
+    }
+
+    void AppStateChanged()
+    {
+        StateHasChanged();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        var _isAuthenticated = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var isAuthenticated = _isAuthenticated.User.Identity.IsAuthenticated;
+        if (!isAuthenticated)
+        {
+            NavigationManager.NavigateTo("Identity/Account/Login", true);
+        }
+    }
+
+    async Task GetTheme(int themeId)
+    {
+        currentTheme = ThemeService.GetById(themeId);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    async Task ChangeTheme()
+    {
+        if (currentTheme.Id == 1)
+        {
+            await GetTheme(2);
+        }
+        else
+        {
+            await GetTheme(1);
+        }
+        var result = await AppUserService.SetUserTheme(currentTheme.Id, SessionData.SessionUser.Id);
+    }
+
+    void IDisposable.Dispose()
+    {
+        appState.OnAppStateChanged -= AppStateChanged;
+    }
+
+}
+
+<style>
+    .body-content {
+        font-size: 0.875rem;
+        height: calc(100vh - 128px);
+        overflow: scroll;
+    }
+
+    .drawer {
+        background: @currentTheme.NavBackgroundColor;
+    }
+
+        .drawer::-webkit-scrollbar {
+            display: none;
+        }
+
+    .mud-drawer .mud-drawer-content {
+        width: inherit;
+    }
+
+    .nav-footer .mud-icon-button:hover {
+        background-color: @currentTheme.ButtonRadiusColor;
+    }
+
+    .nav-footer {
+        height: 64px;
+        display: flex;
+        position: fixed;
+        width: inherit;
+        bottom: 0;
+        padding: 4px;
+        align-items: center;
+        background: @currentTheme.NavFooterBackground;
+    }
+
+    .light-switcher {
+        color: @currentTheme.NavFontColor;
+    }
+
+    .footer-color {
+        color: @currentTheme.NavFontColor;
+    }
+
+    .add-cancel-btn {
+        width: 81px;
+    }
+
+    .edit-save-btn {
+        width: 68px;
+    }
+
+    .k-numerictextbox .k-input {
+        text-align: right;
+    }
+
+    .totals {
+        display: flex;
+        width: inherit;
+        justify-content: space-between;
+        font-weight: 500;
+    }
+
+    .combo-header-row {
+        display: flex;
+        width: inherit;
+        width: 100%;
+        background: #fafafa;
+        font-size: 0.875rem;
+        font-weight: 500;
+        padding: 4px 8px 4px 8px;
+        text-align: left;
+    }
+
+    .combo-item-row {
+        display: flex;
+        width: 100%;
+        font-size: 0.875rem;
+        padding: 2px 8px 2px 8px;
+        text-align: left;
+    }
+
+    .cell-id {
+        width: 20%;
+        padding: 2px 8px 2px 8px;
+        white-space: nowrap;
+    }
+
+    .cell-code {
+        width: 30%;
+        padding: 2px 8px 2px 8px;
+        white-space: nowrap;
+    }
+
+    .cell-name {
+        padding: 2px 8px 2px 8px;
+        white-space: nowrap;
+    }
+
+    .item-cell {
+        padding: 4px;
+        text-align: center;
+        font-size: 1rem;
+        color: #424242;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        cursor: auto;
+    }
+
+        .item-cell:focus {
+            outline: solid;
+            outline-color: #594ae2;
+        }
+
+    fieldset {
+        border-width: 1px;
+        border-color: rgba(0, 0, 0, 0.16);
+    }
+
+    .txt-center {
+        text-align: center !important;
+    }
+</style>

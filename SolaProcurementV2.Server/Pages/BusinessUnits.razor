@@ -1,0 +1,529 @@
+﻿@page "/businessunits"
+
+@implements IDisposable
+@inject StatusService StatusService
+@inject BusinessUnitService ModelService
+@using Model = BusinessUnit
+
+
+<PageTitle>@pageTitle</PageTitle>
+
+<TelerikGrid @ref="@gridRef" @key="@gridKey" Data="@modelList" Height="calc(100vh - 160px)"
+                 Pageable="true" Sortable="true" Navigable="true" Groupable="@showGroup"
+                 FilterMode="@GridFilterMode.FilterMenu" ShowColumnMenu="true"
+                 Resizable="true" Reorderable="true" PageSize="@gridPageSize"
+                 SelectionMode="@(editMode ? GridSelectionMode.None : GridSelectionMode.Multiple)" @bind-SelectedItems="@selectedModelList"
+                 OnRowClick="@OnRowClickHandler" OnRowDoubleClick="@OnRowDoubleClickHandler"
+                 OnRowContextMenu="@OnRowContextMenu" ConfirmDelete="true"
+                 OnDelete="@(e => DeleteHandler(e, 1))">
+        <GridToolBar>
+            @if (!gridReadOnly)
+        {
+                    <GridCommandButton Icon="add" Enabled="@(!editMode && PageData.Menu.CreateAccess)" OnClick="CreateHandler">Add</GridCommandButton>
+                    <GridCommandButton Command="Delete" Icon="delete" Enabled="@(!editMode && selectedModelList.Count() > 0 && PageData.Menu.DeleteAccess)" OnClick="@(e => DeleteHandler(e, 2))">Delete</GridCommandButton>
+        }
+            <MudSpacer />
+            <GridCommandButton Command="ExportToExcel" Icon="excel" OnClick="ExportToExcel">Export to Excel</GridCommandButton>
+            <GridCommandButton Command="ShowRowButtons" Icon="button" OnClick="@(() => showRowButtons = !showRowButtons)">Row buttons</GridCommandButton>
+            <GridCommandButton Command="ShowGroup" Icon="layout" OnClick="@(() => showGroup = !showGroup)">Group</GridCommandButton>
+            <MudText Class="ml-6" Align="Align.Right">Rows per page:</MudText>
+            <TelerikDropDownList Width="100px" TextField="Caption" ValueField="Size" @bind-Value="gridPageSize"
+                                 Data="@(new List<GridPageSize>() {
+            new GridPageSize {Caption = $"All ({modelList.Count()})", Size = modelList.Count()},
+            new GridPageSize {Caption="10", Size=10},
+            new GridPageSize {Caption="20", Size=20},
+            new GridPageSize {Caption="50", Size=50},
+            new GridPageSize {Caption="100", Size=100},
+            new GridPageSize {Caption="1000", Size=1000}})"></TelerikDropDownList>
+        </GridToolBar>
+        <GridColumns>
+            <GridCommandColumn ShowColumnMenu="false" Reorderable="false" Width="90px" Visible="@(showRowButtons && !gridReadOnly)">
+                <GridCommandButton Icon="edit" ShowInEdit="false" Enabled="(!editMode && PageData.Menu.UpdateAccess)" OnClick="EditHandler" />
+                <GridCommandButton Command="Delete" Icon="delete" ShowInEdit="false" Enabled="(!editMode && PageData.Menu.DeleteAccess)" />
+            </GridCommandColumn>
+            <GridCheckboxColumn ShowColumnMenu="false" Reorderable="false" Locked="true" Width="42px" Visible="@(!editMode)" />
+            <GridColumn Field="@(nameof(Model.RowIndex))" Title="Index" Width="70px" Editable="false" Groupable="false" Filterable="false" TextAlign="ColumnTextAlign.Right" Visible="false" />
+            <GridColumn Field="@(nameof(Model.Id))" Title="Id" Width="70px" Editable="false" TextAlign="ColumnTextAlign.Right" Visible="@devMode" />
+            <GridColumn Field="@(nameof(Model.Code))" Title="Username" />
+            <GridColumn Field="@(nameof(Model.Name))" Title="Full Name" />
+            <GridColumn Field="@(nameof(Model.Description))" Title="Description" />
+            
+            <GridColumn Field="@(nameof(Model.StatusId))" Title="Status">
+                <Template>
+                @{
+                    var rowContext = (context as Model);
+                            var lookupValue = statusList.FirstOrDefault(e => e.Id == rowContext.StatusId);
+                            var displayValue = (lookupValue != null ? lookupValue.Name : "not found");
+                            <text>@displayValue</text>
+                }
+                </Template>
+            </GridColumn>
+        </GridColumns>
+    </TelerikGrid>
+    <TelerikContextMenu @ref="@gridContextMenuRef" Data="@StaticData.MenuItemList"
+                        OnClick="@((MenuItem argsItem) => ContextMenuClickHandler(argsItem))">
+    </TelerikContextMenu>
+
+
+@code {
+    int menuId = 2101;
+    string pageTitle = "Business Units";
+    bool gridReadOnly = false;
+
+    bool showRowButtons { get; set; } = false;
+    bool showDecimals { get; set; } = false;
+    bool showGroup { get; set; } = false;
+
+    [CascadingParameter] public AppState AppState { get; set; }
+    [CascadingParameter] public DialogFactory Dialogs { get; set; }
+
+    int activeTabIndex = 0;
+    bool devMode = false;
+
+    // Grid specific variables - start
+    List<Model> modelList = new();
+    IEnumerable<Model> selectedModelList = new List<Model>();
+    List<Model> deletedModelList = new List<Model>();
+    Model selectedModel;
+
+    Guid gridKey;
+    TelerikGrid<Model> gridRef;
+    TelerikContextMenu<MenuItem> gridContextMenuRef;
+    int gridPageSize = 20;
+    bool editMode = false;
+    // Grid specific variables - end
+
+    // Page specific variables - start
+    IEnumerable<Status> statusList = new List<Status>();
+    Status selectedStatus = new();
+    // Page specific variables - end
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        AppState.IsLoading = true;
+
+        await FillDefaultData();
+        AppStateInitialize();
+
+        AppState.IsLoading = false;
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (!(PageData.Menu.ReadAccess))
+            {
+                NavigationManager.NavigateTo("/notfound");
+            }
+        }
+    }
+
+    async Task FillDefaultData()
+    {
+        PageData.GetAccessLevel(menuId);
+
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+
+        var _businessUnitId = 0;
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("bu", out var _bu))
+        {
+            _businessUnitId = Convert.ToInt32(_bu);
+        }
+
+        var _modelId = 0;
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("id", out var _id))
+        {
+            _modelId = Convert.ToInt32(_id);
+        }
+
+        var _modelCode = "";
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("code", out var _code))
+        {
+            _modelCode = _code;
+        }
+
+        StaticData.MenuItemList = StaticData.GetMenuItemList(PageData.Menu, gridReadOnly);
+        await FillData();
+    }
+
+    async Task FillData()
+    {
+        AppState.IsLoading = true;
+        var _modelList = await ModelService.GetAllAsync();
+        modelList = _modelList.Result.ToList();
+        statusList = await StatusService.GetAllAsync();
+        AppState.IsLoading = false;
+    }
+
+    void AppStateInitialize()
+    {
+        AppState.OnBackClick += BackClick;
+        AppState.OnAddClick += AddClick;
+        AppState.OnEditClick += EditClick;
+        AppState.OnSaveClick += SaveClick;
+        AppState.OnDeleteClick += DeleteClick;
+        AppState.OnRefreshClick += RefreshClick;
+        AppState.OnReportsClick += ReportsClick;
+        AppState.OnAttachmentsClick += AttachmentsClick;
+        AppState.OnApproveClick += ApproveClick;
+        AppState.OnSuspendClick += SuspendClick;
+        AppState.OnRejectClick += RejectClick;
+        AppState.OnReportProblemClick += ReportProblemClick;
+        AppState.OnDocumentationClick += DocumentationClick;
+        AppState.OnDevModeClick += DevModeClick;
+        AppState.OnPropertiesClick += PropertiesClick;
+
+        AppState.IsBackVisible = true;
+        AppState.IsBackDisabled = false;
+        AppState.IsAddVisible = false;
+        AppState.IsAddDisabled = (!PageData.Menu.CreateAccess);
+        AppState.IsEditVisible = false;
+        AppState.IsEditDisabled = (!PageData.Menu.UpdateAccess);
+        AppState.IsSaveVisible = false;
+        AppState.IsSaveDisabled = false;
+        AppState.IsDeleteVisible = false;
+        AppState.IsDeleteDisabled = (!PageData.Menu.DeleteAccess); ;
+        AppState.IsRefreshVisible = true;
+        AppState.IsRefreshDisabled = false;
+        AppState.IsReportsVisible = true;
+        AppState.IsReportsDisabled = false;
+        AppState.IsAttachmentsVisible = true;
+        AppState.IsAttachmentsDisabled = false;
+        AppState.IsApprovalVisible = false;
+        AppState.IsApproveVisible = true;
+        AppState.IsApproveDisabled = false;
+        AppState.IsSuspendVisible = true;
+        AppState.IsSuspendDisabled = false;
+        AppState.IsRejectVisible = true;
+        AppState.IsRejectDisabled = false;
+        AppState.IsReportProblemVisible = true;
+        AppState.IsReportProblemDisabled = false;
+        AppState.IsDocumentationVisible = true;
+        AppState.IsDocumentationDisabled = false;
+        AppState.IsDevModeVisible = true;
+        AppState.IsDevModeDisabled = false;
+        AppState.IsPropertiesVisible = true;
+        AppState.IsPropertiesDisabled = false;
+    }
+
+    void IDisposable.Dispose()
+    {
+        AppState.OnBackClick -= BackClick;
+        AppState.OnAddClick -= AddClick;
+        AppState.OnEditClick -= EditClick;
+        AppState.OnSaveClick -= SaveClick;
+        AppState.OnDeleteClick -= DeleteClick;
+        AppState.OnRefreshClick -= RefreshClick;
+        AppState.OnReportsClick -= ReportsClick;
+        AppState.OnAttachmentsClick -= AttachmentsClick;
+        AppState.OnApproveClick -= ApproveClick;
+        AppState.OnSuspendClick -= SuspendClick;
+        AppState.OnRejectClick -= RejectClick;
+        AppState.OnReportProblemClick -= ReportProblemClick;
+        AppState.OnDocumentationClick -= DocumentationClick;
+        AppState.OnDevModeClick -= DevModeClick;
+        AppState.OnPropertiesClick -= PropertiesClick;
+    }
+
+    void ShowProperties(PropertiesData propertiesData)
+    {
+        AppState.PropertiesData = propertiesData;
+    }
+
+    void BackClick()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+
+    void AddClick()
+    {
+        //
+    }
+
+    void EditClick()
+    {
+        //
+    }
+
+    void SaveClick()
+    {
+        //
+    }
+
+    void DeleteClick()
+    {
+        //
+    }
+
+    async void RefreshClick()
+    {
+        await FillData();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    void ReportsClick()
+    {
+        //
+    }
+
+    void AttachmentsClick()
+    {
+        //
+    }
+
+    void ApproveClick()
+    {
+        //
+    }
+
+    void SuspendClick()
+    {
+        //
+    }
+
+    void RejectClick()
+    {
+        //
+    }
+
+    void ReportProblemClick()
+    {
+        //
+    }
+
+    void DocumentationClick()
+    {
+        //
+    }
+
+    void DevModeClick()
+    {
+        devMode = !devMode;
+        StateHasChanged();
+    }
+
+    void PropertiesClick()
+    {
+        //
+    }
+
+    void OnRowClickHandler(GridRowClickEventArgs args)
+    {
+        //
+    }
+
+    void OnRowDoubleClickHandler(GridRowClickEventArgs args)
+    {
+        var argsItem = args.Item as Model;
+        GoToDetails(argsItem.Id);
+    }
+
+    void GoToDetails(int id)
+    {
+        NavigationManager.NavigateTo($"/businessunitcard?id={id}");
+    }
+
+    void SetEditMode(Model argsItem)
+    {
+        editMode = true;
+        var currState = gridRef.GetState();
+        currState.InsertedItem = null;
+        currState.EditItem = null;
+        currState.OriginalEditItem = null;
+
+        Model itemToEdit = new(argsItem);
+
+        currState.EditItem = itemToEdit;
+        currState.OriginalEditItem = argsItem;
+        gridRef.SetState(currState);
+    }
+
+
+    async Task OnRowContextMenu(GridRowClickEventArgs args)
+    {
+        if (!editMode)
+        {
+            var argsItem = args.Item as Model;
+            selectedModel = argsItem;
+            if (args.EventArgs is MouseEventArgs mouseEventArgs)
+            {
+                await gridContextMenuRef.ShowAsync(mouseEventArgs.ClientX, mouseEventArgs.ClientY);
+            }
+        }
+    }
+
+    async Task ContextMenuClickHandler(MenuItem menuItem)
+    {
+        if (menuItem.Action != null)
+        {
+            menuItem.Action.Invoke();
+        }
+        else
+        {
+
+            switch (menuItem.CommandName)
+            {
+                case "GoToDetails":
+                    GoToDetails(selectedModel.Id);
+                    break;
+                case "ShowProperties":
+                    //
+                    break;
+                case "BeginEdit":
+                    GoToDetails(selectedModel.Id);
+                    break;
+                case "BeginDelete":
+                    await DeleteHandler(null, 3);
+                    break;
+                case "All":
+                    gridPageSize = modelList.Count();
+                    break;
+                case "10":
+                    gridPageSize = 10;
+                    break;
+                case "20":
+                    gridPageSize = 20;
+                    break;
+                case "50":
+                    gridPageSize = 50;
+                    break;
+                case "100":
+                    gridPageSize = 100;
+                    break;
+                case "1000":
+                    gridPageSize = 1000;
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
+    void ActiveTabIndexChanged(int tabIndex)
+    {
+        activeTabIndex = tabIndex;
+    }
+
+    // Grid CRUD events - start
+
+    void CreateHandler(GridCommandEventArgs args)
+    {
+        NavigationManager.NavigateTo("/businessunitcard");
+    }
+
+    void EditHandler(GridCommandEventArgs args)
+    {
+        var argsItem = (Model)args.Item;
+        GoToDetails(argsItem.Id);
+    }
+
+    async Task DeleteHandler(GridCommandEventArgs args, int sourceButton)
+    {
+        var argsItem = (Model)args?.Item;
+
+        if (sourceButton == 1 && argsItem != null)
+        {
+            // Row button - has built-in confirmation dialog
+            var deletedId = argsItem.Id;
+            var result = await ModelService.DeleteAsync(deletedId);
+            if (result.DeletedResult > 0)
+            {
+                await FillData();
+                AppState.ShowAlert($"A record with Id {deletedId} successfully deleted", Severity.Success);
+            }
+            else
+            {
+                AppState.ShowAlert(result.DeletedResultMessage, Severity.Error);
+            }
+        }
+        else if (sourceButton == 2 && selectedModelList.Count() > 0)
+        {
+            // Checkbox selection
+            var count = selectedModelList.Count();
+            var isConfirmed = await Dialogs.ConfirmAsync($"Are you sure you want to delete {count} record(s)?", "Delete!");
+
+            if (isConfirmed)
+            {
+                var result = await ModelService.DeleteListAsync(selectedModelList.Select(e => e.Id));
+                if (result.DeletedResult > 0)
+                {
+                    await FillData();
+                    AppState.ShowAlert($"{count} record(s) were successfully deleted", Severity.Success);
+                }
+                else
+                {
+                    AppState.ShowAlert(result.DeletedResultMessage, Severity.Error);
+                }
+            }
+        }
+        else if (sourceButton == 3 && selectedModel != null)
+        {
+            // Context menu
+            var isConfirmed = await Dialogs.ConfirmAsync($"Are you sure you want to delete a record?", "Delete!");
+
+            if (isConfirmed)
+            {
+                var deletedId = selectedModel.Id;
+                var result = await ModelService.DeleteAsync(deletedId);
+                if (result.DeletedResult > 0)
+                {
+                    await FillData();
+                    AppState.ShowAlert($"A record with Id {deletedId} successfully deleted", Severity.Success);
+                }
+                else
+                {
+                    AppState.ShowAlert(result.DeletedResultMessage, Severity.Error);
+                }
+            }
+            else
+            {
+                selectedModel = null;
+            }
+        }
+        else
+        {
+            AppState.ShowAlert("Item is not selected", Severity.Warning);
+        }
+    }
+
+    //void UpdateGrid()
+    //{
+    //    AppState.IsLoading = true;
+    //    var tempList = ModelService.IndexList(modelList);
+    //    modelList = tempList.ToList();
+    //    selectedModelList = new List<Model>();
+    //    gridKey = Guid.NewGuid();
+    //    deletedModelList = deletedModelList.Where(e => e.Id != 0).ToList();
+    //    AppState.IsLoading = false;
+    //}
+
+    void ExportToExcel()
+    {
+        ModelService.ExportToExcel(modelList);
+    }
+
+    // Grid CRUD events - end
+
+    // Form events - start
+
+    void OnFormSubmit()
+    {
+
+    }
+
+    // Form events - start
+
+}
+
+<style>
+    .active-color{
+        color: #00c600;
+    }
+
+    .inactive-color{
+        color: #424242;
+    }
+
+</style>

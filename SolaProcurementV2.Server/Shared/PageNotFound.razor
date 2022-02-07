@@ -1,0 +1,28 @@
+﻿@page "/notfound"
+
+@implements IDisposable
+
+<MudPaper Elevation="2" Class="px-2 py-2">
+    <MudAlert Class="px-2 py-2" Severity="Severity.Warning" Variant="Variant.Text" AlertTextPosition="AlertTextPosition.Center">
+        <ChildContent>
+            <MudText>@(NoAccess ? "Sorry, you are not allowed to access this page!" : "Page not found!")</MudText>
+            <MudButton Style="margin: 8px 0 8px -8px" Color="Color.Primary" OnClick="@(() => NavigationManager.NavigateTo("/"))"> Go to Homepage</MudButton>
+        </ChildContent>
+    </MudAlert>
+</MudPaper>
+
+
+@code {
+    [CascadingParameter] public AppState AppState { get; set; }
+    [Parameter] public bool NoAccess { get; set; } = true;
+
+    protected override void OnInitialized()
+    {
+        AppState.Visible = false;
+    }
+
+    void IDisposable.Dispose()
+    {
+        AppState.Visible = true;
+    }
+}

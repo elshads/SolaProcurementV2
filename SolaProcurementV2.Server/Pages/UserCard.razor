@@ -1,0 +1,420 @@
+﻿@page "/usercard"
+@implements IDisposable
+
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<AppUser> UserManager
+@inject StatusService StatusService
+@inject AppUserService ModelService
+@using Model = AppUser
+
+
+<FlexBox>
+    <FlexColumn ColSpan="4">
+        <MudPaper Class="px-4">
+            <TelerikForm EditContext="@formEditContext" Columns="1" ColumnSpacing="8px">
+                <FormValidation>
+                    <FluentValidationValidator DisableAssemblyScanning="true"/>
+                </FormValidation>
+                <FormItems>
+                    @if (devMode)
+                    {
+                        <FormItem>
+                            <Template>
+                                <label for="id" class="k-label k-form-label">Id</label>
+                                <TelerikNumericTextBox Id="id" Enabled="false" Arrows="false" @bind-Value="@(currentModel.Id)"></TelerikNumericTextBox>
+                            </Template>
+                        </FormItem>
+                    }
+
+                    <FormItem>
+                        <Template>
+                            <label for="username" class="k-label k-form-label">UserName</label>
+                            <TelerikTextBox Id="username" @bind-Value="@(currentModel.UserName)" Enabled="@(PageData.Menu.CreateAccess && currentModel.Id == 0)"></TelerikTextBox>
+                            <TelerikValidationMessage For="@(() => currentModel.UserName)"></TelerikValidationMessage>
+                        </Template>
+                    </FormItem>
+
+                    <FormItem>
+                        <Template>
+                            <label for="fullname" class="k-label k-form-label">Full Name</label>
+                            <TelerikTextBox Id="fullname" @bind-Value="@(currentModel.FullName)" Enabled="@((PageData.Menu.CreateAccess && currentModel.Id == 0) || (PageData.Menu.UpdateAccess && currentModel.Id > 0))"></TelerikTextBox>
+                            <TelerikValidationMessage For="@(() => currentModel.FullName)"></TelerikValidationMessage>
+                        </Template>
+                    </FormItem>
+
+                    <FormItem>
+                        <Template>
+                            <label for="description" class="k-label k-form-label">Description</label>
+                            <TelerikTextBox Id="description" @bind-Value="@(currentModel.Description)" Enabled="@((PageData.Menu.CreateAccess && currentModel.Id == 0) || (PageData.Menu.UpdateAccess && currentModel.Id > 0))"></TelerikTextBox>
+                            <TelerikValidationMessage For="@(() => currentModel.Description)"></TelerikValidationMessage>
+                        </Template>
+                    </FormItem>
+
+                    <FormItem>
+                        <Template>
+                            <label for="notificationemail" class="k-label k-form-label">Notification Email</label>
+                            <TelerikTextBox Id="notificationemail" @bind-Value="@(currentModel.NotificationEmail)" Enabled="@((PageData.Menu.CreateAccess && currentModel.Id == 0) || (PageData.Menu.UpdateAccess && currentModel.Id > 0))"></TelerikTextBox>
+                            <TelerikValidationMessage For="@(() => currentModel.NotificationEmail)"></TelerikValidationMessage>
+                        </Template>
+                    </FormItem>
+
+                    <FormItem>
+                        <Template>
+                            <label for="expirationdate" class="k-label k-form-label">Expiration Date</label>
+                            <TelerikDatePicker Id="expirationdate" @bind-Value="@(currentModel.ExpirationDate)" Enabled="@(((PageData.Menu.CreateAccess && currentModel.Id == 0) || (PageData.Menu.UpdateAccess && currentModel.Id > 0)))"></TelerikDatePicker>
+                            <TelerikValidationMessage For="@(() => currentModel.ExpirationDate)"></TelerikValidationMessage>
+                        </Template>
+                    </FormItem>
+
+                    <FormItem>
+                        <Template>
+                            <label for="isadmin" class="k-label k-form-label">Administrator</label>
+                            <MudSwitch id="isadmin" @bind-Checked="@(currentModel.Administrator)" Color="Color.Primary" Disabled="@(!((PageData.Menu.CreateAccess && currentModel.Id == 0) || (PageData.Menu.UpdateAccess && currentModel.Id > 0)))" />
+                            <TelerikValidationMessage For="@(() => currentModel.Administrator)"></TelerikValidationMessage>
+                        </Template>
+                    </FormItem>
+
+                    @if (PageData.Menu.CreateAccess && currentModel.Id == 0)
+                    {
+                        <FormItem>
+                            <Template>
+                                <label for="password" class="k-label k-form-label">Enter Password</label>
+                                <TelerikTextBox Id="password" Password="true" @bind-Value="@(currentModel.Password)" Enabled="true"></TelerikTextBox>
+                                <TelerikValidationMessage For="@(() => currentModel.Password)"></TelerikValidationMessage>
+                            </Template>
+                        </FormItem>
+
+                        <FormItem>
+                            <Template>
+                                <label for="passwordconfirmation" class="k-label k-form-label">Confirm Password</label>
+                                <TelerikTextBox Id="passwordconfirmation" Password="true" @bind-Value="@(currentModel.PasswordConfirmation)" Enabled="true"></TelerikTextBox>
+                                <TelerikValidationMessage For="@(() => currentModel.PasswordConfirmation)"></TelerikValidationMessage>
+                            </Template>
+                        </FormItem>
+                    }
+
+                    <FormItem>
+                        <Template>
+                            <label for="status" class="k-label k-form-label">Status</label>
+                            <GridDropDownList Id="status" Data="@statusList" @bind-Value="@(currentModel.StatusId)" ValueField="@nameof(Status.Id)" TextField="@nameof(Status.Name)" Enabled="@((PageData.Menu.CreateAccess && currentModel.Id == 0) || (PageData.Menu.UpdateAccess && currentModel.Id > 0))"></GridDropDownList>
+                            <TelerikValidationMessage For="@(() => currentModel.StatusId)"></TelerikValidationMessage>
+                        </Template>
+                    </FormItem>
+                </FormItems>
+                <FormButtons>
+                </FormButtons>
+            </TelerikForm>
+        </MudPaper>
+    </FlexColumn>
+    <FlexColumn ColSpan="3" MarginLeft="24">
+        <PhotoControl @bind-Photo="@currentModel.Photo" Title="@currentModel.FullName" Enabled="@((PageData.Menu.CreateAccess && currentModel.Id == 0) || (PageData.Menu.UpdateAccess && currentModel.Id > 0))"></PhotoControl>
+        <MudButton Class="mt-4" Variant="Variant.Text" Color="Color.Primary" Disabled="@(!PageData.Menu.UpdateAccess || currentModel.Id == 0)" OnClick="@(() => showResetPassword = !showResetPassword)">Reset Password</MudButton>
+    </FlexColumn>
+    <FlexColumn ColSpan="5" MarginLeft="24">
+        <AppUserUserGroups UserId="currentModel.Id" Height="calc(100vh - 160px)"></AppUserUserGroups>
+    </FlexColumn>
+</FlexBox>
+<ResetPassword @bind-Visible="showResetPassword" UserId="@currentModel.Id"></ResetPassword>
+
+
+@code {
+    int menuId = 1101;
+    string pageTitle = "User";
+
+    [CascadingParameter] public AppState AppState { get; set; }
+    [CascadingParameter] public DialogFactory Dialogs { get; set; }
+
+    int activeTabIndex = 0;
+    bool devMode = false;
+
+    // Page specific variables - start
+    Model currentModel = new();
+    EditContext formEditContext = new(new Model());
+    IEnumerable<Status> statusList = new List<Status>();
+    Status selectedStatus = new();
+    bool showResetPassword = false;
+    // Page specific variables - end
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        AppState.IsLoading = true;
+
+        await FillDefaultData();
+        AppStateInitialize();
+
+        AppState.IsLoading = false;
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (!(PageData.Menu.ReadAccess))
+            {
+                NavigationManager.NavigateTo("/notfound");
+            }
+        }
+    }
+
+    async Task FillDefaultData()
+    {
+        PageData.GetAccessLevel(menuId);
+
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+
+        var _businessUnitId = 0;
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("bu", out var _bu))
+        {
+            _businessUnitId = Convert.ToInt32(_bu);
+        }
+
+        var _modelId = 0;
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("id", out var _id))
+        {
+            _modelId = Convert.ToInt32(_id);
+        }
+
+        var _modelCode = "";
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("code", out var _code))
+        {
+            _modelCode = _code;
+        }
+
+        await FillData(_modelId);
+    }
+
+    async Task FillData(int _modelId)
+    {
+        AppState.IsLoading = true;
+        var _currentModel = await ModelService.GetByIdAsync(_modelId, SessionData.SessionUser.Id);
+        currentModel = (_currentModel != null && _currentModel.Id > 0 ? _currentModel : new());
+        formEditContext = new EditContext(currentModel);
+        statusList = await StatusService.GetAllAsync();
+        AppState.IsLoading = false;
+    }
+
+    void AppStateInitialize()
+    {
+        AppState.OnBackClick += BackClick;
+        AppState.OnAddClick += AddClick;
+        AppState.OnEditClick += EditClick;
+        AppState.OnSaveClick += SaveClick;
+        AppState.OnDeleteClick += DeleteClick;
+        AppState.OnRefreshClick += RefreshClick;
+        AppState.OnReportsClick += ReportsClick;
+        AppState.OnAttachmentsClick += AttachmentsClick;
+        AppState.OnApproveClick += ApproveClick;
+        AppState.OnSuspendClick += SuspendClick;
+        AppState.OnRejectClick += RejectClick;
+        AppState.OnReportProblemClick += ReportProblemClick;
+        AppState.OnDocumentationClick += DocumentationClick;
+        AppState.OnDevModeClick += DevModeClick;
+        AppState.OnPropertiesClick += PropertiesClick;
+
+
+        AppState.IsAddVisible = false;
+        AppState.IsSaveVisible = true;
+        AppState.IsSaveDisabled = !(PageData.Menu.CreateAccess || PageData.Menu.UpdateAccess);
+        AppState.IsDeleteVisible = true;
+        AppState.IsDeleteDisabled = (!PageData.Menu.DeleteAccess || currentModel.Id == 0);
+    }
+
+    void IDisposable.Dispose()
+    {
+        AppState.OnBackClick -= BackClick;
+        AppState.OnAddClick -= AddClick;
+        AppState.OnEditClick -= EditClick;
+        AppState.OnSaveClick -= SaveClick;
+        AppState.OnDeleteClick -= DeleteClick;
+        AppState.OnRefreshClick -= RefreshClick;
+        AppState.OnReportsClick -= ReportsClick;
+        AppState.OnAttachmentsClick -= AttachmentsClick;
+        AppState.OnApproveClick -= ApproveClick;
+        AppState.OnSuspendClick -= SuspendClick;
+        AppState.OnRejectClick -= RejectClick;
+        AppState.OnReportProblemClick -= ReportProblemClick;
+        AppState.OnDocumentationClick -= DocumentationClick;
+        AppState.OnDevModeClick -= DevModeClick;
+        AppState.OnPropertiesClick -= PropertiesClick;
+    }
+
+    void ShowProperties(PropertiesData propertiesData)
+    {
+        AppState.PropertiesData = propertiesData;
+    }
+
+    void BackClick()
+    {
+        NavigationManager.NavigateTo("/users");
+    }
+
+    void AddClick()
+    {
+        //
+    }
+
+    void EditClick()
+    {
+        //
+    }
+
+    async void SaveClick()
+    {
+        await ValidateForm(formEditContext);
+    }
+
+    async void DeleteClick()
+    {
+        var isConfirmed = await Dialogs.ConfirmAsync($"Are you sure you want to delete a record?", "Delete!");
+
+        if (isConfirmed)
+        {
+            var result = await ModelService.DeleteAsync(currentModel.Id);
+            if (result.DeletedResult > 0)
+            {
+                AppState.ShowAlert($"A record with Id {currentModel.Id} successfully deleted", Severity.Success);
+                NavigationManager.NavigateTo("/users");
+            }
+            else
+            {
+                AppState.ShowAlert(result.DeletedResultMessage, Severity.Error);
+            }
+        }
+    }
+
+    void RefreshClick()
+    {
+        //
+    }
+
+    void ReportsClick()
+    {
+        //
+    }
+
+    void AttachmentsClick()
+    {
+        //
+    }
+
+    void ApproveClick()
+    {
+        //
+    }
+
+    void SuspendClick()
+    {
+        //
+    }
+
+    void RejectClick()
+    {
+        //
+    }
+
+    void ReportProblemClick()
+    {
+        //
+    }
+
+    void DocumentationClick()
+    {
+        //
+    }
+
+    void DevModeClick()
+    {
+        devMode = !devMode;
+        StateHasChanged();
+    }
+
+    void PropertiesClick()
+    {
+        //
+    }
+
+    async Task ValidateForm(EditContext editContext)
+    {
+        var model = editContext.Model as Model;
+        var isValid = editContext.Validate();
+
+        if (isValid)
+        {
+            if (model.Id > 0)
+            {
+                await Update(model);
+            }
+            else
+            {
+                await Create(model);
+            }
+        }
+        else
+        {
+            AppState.ShowAlert("Please correct the errors and try again", Severity.Error);
+        }
+    }
+
+    async Task Create(Model model)
+    {
+        model.Email = model.UserName;
+        model.CreatedBy = SessionData.SessionUser.Id;
+        model.UpdatedBy = SessionData.SessionUser.Id;
+        model.CreatedOn = DateTime.Now;
+        model.UpdatedOn = DateTime.Now;
+
+        var password = model.Password;
+        model.Password = "";
+        model.PasswordConfirmation = "";
+
+        AppState.IsLoading = true;
+        var result = await UserManager.CreateAsync(model, password);
+        AppState.IsLoading = false;
+
+        if (result.Succeeded)
+        {
+            var newUser = await ModelService.GetByUserNameAsync(model.UserName);
+            var sqlResult = await ModelService.CreateAsync(newUser, SessionData.SessionUser.Id);
+            if (sqlResult.InsertedResult > 0)
+            {
+                AppState.ShowAlert($"User with id {newUser.Id} successfully created", Severity.Success, () => NavigationManager.NavigateTo($"/usercard?id={newUser.Id}"));
+                NavigationManager.NavigateTo($"/users");
+            }
+            else
+            {
+                var deletedResult = await ModelService.DeleteAspNetUserAsync(newUser.Id);
+                AppState.ShowAlert(sqlResult.InsertedResultMessage, Severity.Error);
+            }
+        }
+        else
+        {
+            foreach (var item in result.Errors)
+            {
+                AppState.ShowAlert(item.Description, Severity.Error);
+            }
+        }
+
+    }
+
+    async Task Update(Model model)
+    {
+        model.UpdatedBy = SessionData.SessionUser.Id;
+        model.UpdatedOn = DateTime.Now;
+
+        var result = await ModelService.UpdateAsync(model);
+
+        if (result.UpdatedResult > 0)
+        {
+            AppState.ShowAlert($"User with id {model.Id} successfully updated", Severity.Success, () => NavigationManager.NavigateTo($"/usercard?id={model.Id}"));
+            NavigationManager.NavigateTo("/users");
+        }
+        else
+        {
+            AppState.ShowAlert(result.UpdatedResultMessage, Severity.Error);
+        }
+
+    }
+
+
+}

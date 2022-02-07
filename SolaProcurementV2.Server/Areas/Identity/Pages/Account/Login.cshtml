@@ -1,0 +1,144 @@
+﻿@page
+@model LoginModel
+
+@{
+    ViewData["Title"] = "Log in";
+}
+
+
+<div class="flexbox">
+    <div class="flexcolumn">
+        <div class="formbox">
+            <section>
+                <form id="account" asp-page-handler="login" method="post">
+                    <h2>Log in</h2>
+                    <hr />
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <div class="form-floating">
+                        <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" />
+                        <label asp-for="Input.Email" class="form-label"></label>
+                        <span asp-validation-for="Input.Email" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating mt-2">
+                        <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" />
+                        <label asp-for="Input.Password" class="form-label"></label>
+                        <span asp-validation-for="Input.Password" class="text-danger"></span>
+                    </div>
+                    <div>
+                        <div class="checkbox m-2">
+                            <label asp-for="Input.RememberMe" class="form-label">
+                                <input class="form-check-input" asp-for="Input.RememberMe" />
+                                @Html.DisplayNameFor(m => m.Input.RememberMe)
+                            </label>
+                        </div>
+                    </div>
+                    <div>
+                        <button id="login-submit" type="submit" class="w-100 k-button k-primary">Log in</button>
+                    </div>
+                </form>
+            </section>
+        </div>
+        <form asp-page-handler="create" method="post">
+            <button id="create-admin" class="w-100 text-muted textbutton">Create 'admin' user on the server</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<partial name="_ValidationScriptsPartial" />
+}
+
+<style>
+    .textbutton {
+        background: none;
+        border: none;
+        cursor: pointer;
+        margin-top: 24px;
+    }
+
+    .flexbox {
+        display: flex;
+        flex-wrap: wrap;
+        flex-shrink: 0;
+        width: 100%;
+        max-width: 100%;
+        text-align: center
+    }
+
+    .flexcolumn {
+        flex: 0 0 auto;
+        width: 360px;
+        margin: auto;
+        padding-top: 100px;
+    }
+
+    .formbox {
+        padding: 16px;
+        box-shadow: 0 2px 1px -1px rgba(0, 0, 0, 0.2), 0 1px 1px 0 rgba(0, 0, 0, 0.14), 0 1px 3px 0 rgba(0, 0, 0, 0.12);
+        color: #424242;
+        border-radius: 8px;
+        transition: box-shadow 300ms cubic-bezier(.4,0,.2,1) 0ms;
+    }
+
+    .k-button {
+        border-radius: 4px;
+        padding: 4px 8px;
+        box-sizing: border-box;
+        border-width: 1px;
+        border-style: solid;
+        font-size: 16px;
+        line-height: 1.4285714286;
+        font-family: inherit;
+        text-align: center;
+        text-decoration: none;
+        white-space: nowrap;
+        display: -ms-inline-flexbox;
+        display: inline-flex;
+        -ms-flex-align: center;
+        align-items: center;
+        -ms-flex-pack: center;
+        justify-content: center;
+        gap: 4px;
+        vertical-align: middle;
+        -webkit-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        cursor: pointer;
+        outline: none;
+        -webkit-appearance: none;
+        position: relative;
+        height: 50px;
+    }
+
+        .k-button:hover, .k-button:focus {
+            text-decoration: none;
+            outline: 0;
+        }
+
+        .k-button-primary, .k-button.k-primary {
+            border-color: #594ae2;
+            color: #ffffff;
+            background-color: #594ae2;
+            background-image: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.04));
+        }
+
+            .k-button-primary:hover, .k-button.k-primary:hover, .k-button-primary.k-state-hover, .k-state-hover.k-button.k-primary {
+                border-color: #5547d9;
+                background-color: #5547d9;
+            }
+
+            .k-button-primary:focus, .k-button.k-primary:focus, .k-button-primary.k-state-focus, .k-state-focus.k-button.k-primary, .k-button-primary.k-state-focused, .k-state-focused.k-button.k-primary {
+                box-shadow: 0 0 0 2px rgba(89, 74, 226, 0.3);
+            }
+
+            .k-button-primary:active, .k-button.k-primary:active, .k-button-primary.k-state-active, .k-state-active.k-button.k-primary {
+                border-color: #4e41c7;
+                background-color: #4e41c7;
+            }
+
+            .k-button-primary.k-state-selected, .k-state-selected.k-button.k-primary {
+                border-color: #4e41c7;
+                background-color: #4e41c7;
+            }
+
+</style>

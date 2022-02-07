@@ -1,0 +1,380 @@
+﻿@page "/analysisstructure"
+
+@implements IDisposable
+@inject AnalysisStructureService ModelService
+@using Model = AnalysisStructure
+
+
+<PageTitle>@pageTitle</PageTitle>
+
+<ReferenceDropDownList Data="@PageData.BusinessUnitList" Value="@PageData.SelectedBusinessUnit" ValueChanged="((BusinessUnit e) => BusinessUnitChanged(e))" ValueField="@nameof(BusinessUnit.Id)" TextField="@nameof(BusinessUnit.Code)" Width="300px" Class="mb-2" ShowId="@devMode" />
+
+<TelerikGrid @ref="@gridRef" @key="@gridKey" Data="@modelList" Height="calc(100vh - 200px)"
+             Sortable="true" Navigable="true"
+             Resizable="true" Reorderable="true"
+             SelectionMode="GridSelectionMode.None"
+             OnRowClick="@OnRowClickHandler" OnRowDoubleClick="@OnRowDoubleClickHandler">
+    <GridToolBar>
+        <MudSpacer />
+        <GridCommandButton Command="ExportToExcel" Icon="excel" OnClick="ExportToExcel">Export to Excel</GridCommandButton>
+    </GridToolBar>
+    <GridColumns>
+        <GridColumn Field="@(nameof(Model.RowIndex))" Title="Index" Width="70px" Editable="false" Groupable="false" Filterable="false" TextAlign="ColumnTextAlign.Right" Visible="false" />
+        <GridColumn Field="@(nameof(Model.Id))" Title="Id" Width="70px" Editable="false" TextAlign="ColumnTextAlign.Right" Visible="@devMode" />
+        <GridColumn Field="@(nameof(Model.MenuName))" Title="Function" Width="170px" />
+        <GridColumn Field="@(nameof(Model.AnalysisDimensionId01))" Title="01" OnCellRender="@(e => e.Class = "txt-center")">
+            <Template>
+                @{
+                    var rowContext = (context as Model);
+                    <GridComboBox Data="@analysisDimensionList" @bind-Value="@rowContext.AnalysisDimensionId01" PopupWidth="360px" ValueField="Id" TextField="Code" ShowId="@devMode" Enabled="@PageData.Menu.UpdateAccess" />
+                }
+            </Template>
+        </GridColumn>
+        <GridColumn Field="@(nameof(Model.AnalysisDimensionId02))" Title="02" OnCellRender="@(e => e.Class = "txt-center")">
+            <Template>
+                @{
+                    var rowContext = (context as Model);
+                    <GridComboBox Data="@analysisDimensionList" @bind-Value="@rowContext.AnalysisDimensionId02" PopupWidth="360px" ValueField="Id" TextField="Code" ShowId="@devMode" Enabled="@PageData.Menu.UpdateAccess" />
+                }
+            </Template>
+        </GridColumn>
+        <GridColumn Field="@(nameof(Model.AnalysisDimensionId03))" Title="03" OnCellRender="@(e => e.Class = "txt-center")">
+            <Template>
+                @{
+                    var rowContext = (context as Model);
+                    <GridComboBox Data="@analysisDimensionList" @bind-Value="@rowContext.AnalysisDimensionId03" PopupWidth="360px" ValueField="Id" TextField="Code" ShowId="@devMode" Enabled="@PageData.Menu.UpdateAccess" />
+                }
+            </Template>
+        </GridColumn>
+        <GridColumn Field="@(nameof(Model.AnalysisDimensionId04))" Title="04" OnCellRender="@(e => e.Class = "txt-center")">
+            <Template>
+                @{
+                    var rowContext = (context as Model);
+                    <GridComboBox Data="@analysisDimensionList" @bind-Value="@rowContext.AnalysisDimensionId04" PopupWidth="360px" ValueField="Id" TextField="Code" ShowId="@devMode" Enabled="@PageData.Menu.UpdateAccess" />
+                }
+            </Template>
+        </GridColumn>
+        <GridColumn Field="@(nameof(Model.AnalysisDimensionId05))" Title="05" OnCellRender="@(e => e.Class = "txt-center")">
+            <Template>
+                @{
+                    var rowContext = (context as Model);
+                    <GridComboBox Data="@analysisDimensionList" @bind-Value="@rowContext.AnalysisDimensionId05" PopupWidth="360px" ValueField="Id" TextField="Code" ShowId="@devMode" Enabled="@PageData.Menu.UpdateAccess" />
+                }
+            </Template>
+        </GridColumn>
+        <GridColumn Field="@(nameof(Model.AnalysisDimensionId06))" Title="06" OnCellRender="@(e => e.Class = "txt-center")">
+            <Template>
+                @{
+                    var rowContext = (context as Model);
+                    <GridComboBox Data="@analysisDimensionList" @bind-Value="@rowContext.AnalysisDimensionId06" PopupWidth="360px" ValueField="Id" TextField="Code" ShowId="@devMode" Enabled="@PageData.Menu.UpdateAccess" />
+                }
+            </Template>
+        </GridColumn>
+        <GridColumn Field="@(nameof(Model.AnalysisDimensionId07))" Title="07" OnCellRender="@(e => e.Class = "txt-center")">
+            <Template>
+                @{
+                    var rowContext = (context as Model);
+                    <GridComboBox Data="@analysisDimensionList" @bind-Value="@rowContext.AnalysisDimensionId07" PopupWidth="360px" ValueField="Id" TextField="Code" ShowId="@devMode" Enabled="@PageData.Menu.UpdateAccess" />
+                }
+            </Template>
+        </GridColumn>
+        <GridColumn Field="@(nameof(Model.AnalysisDimensionId08))" Title="08" OnCellRender="@(e => e.Class = "txt-center")">
+            <Template>
+                @{
+                    var rowContext = (context as Model);
+                    <GridComboBox Data="@analysisDimensionList" @bind-Value="@rowContext.AnalysisDimensionId08" PopupWidth="360px" ValueField="Id" TextField="Code" ShowId="@devMode" Enabled="@PageData.Menu.UpdateAccess" />
+                }
+            </Template>
+        </GridColumn>
+        <GridColumn Field="@(nameof(Model.AnalysisDimensionId09))" Title="09" OnCellRender="@(e => e.Class = "txt-center")">
+            <Template>
+                @{
+                    var rowContext = (context as Model);
+                    <GridComboBox Data="@analysisDimensionList" @bind-Value="@rowContext.AnalysisDimensionId09" PopupWidth="360px" ValueField="Id" TextField="Code" ShowId="@devMode" Enabled="@PageData.Menu.UpdateAccess" />
+                }
+            </Template>
+        </GridColumn>
+        <GridColumn Field="@(nameof(Model.AnalysisDimensionId10))" Title="10" OnCellRender="@(e => e.Class = "txt-center")">
+            <Template>
+                @{
+                    var rowContext = (context as Model);
+                    <GridComboBox Data="@analysisDimensionList" @bind-Value="@rowContext.AnalysisDimensionId10" PopupWidth="360px" ValueField="Id" TextField="Code" ShowId="@devMode" Enabled="@PageData.Menu.UpdateAccess" />
+                }
+            </Template>
+        </GridColumn>
+    </GridColumns>
+</TelerikGrid>
+
+
+@code {
+    int menuId = 3111;
+    string pageTitle = "Analysis Structure";
+    bool gridReadOnly = false;
+
+    [CascadingParameter] public AppState AppState { get; set; }
+    [CascadingParameter] public DialogFactory Dialogs { get; set; }
+
+    int activeTabIndex = 0;
+    bool devMode = false;
+
+    // Grid specific variables - start
+    List<Model> modelList = new();
+    Model currentModel;
+    IEnumerable<AnalysisDimension> analysisDimensionList = new List<AnalysisDimension>();
+
+    Guid gridKey;
+    TelerikGrid<Model> gridRef;
+    // Grid specific variables - end
+
+    // Page specific variables - start
+    IEnumerable<Status> statusList = new List<Status>();
+    Status selectedStatus = new();
+    // Page specific variables - end
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await FillDefaultData();
+        AppStateInitialize();
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (PageData.SelectedBusinessUnit == null || !(PageData.BusinessUnitList.Select(e => e.Id).Contains(PageData.SelectedBusinessUnit.Id)) || !(PageData.Menu.ReadAccess))
+            {
+                NavigationManager.NavigateTo("/notfound");
+            }
+        }
+    }
+
+    async Task FillDefaultData()
+    {
+        AppState.IsLoading = true;
+        PageData.GetAccessLevel(menuId);
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+        var _businessUnitId = 0;
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("bu", out var _bu))
+        {
+            _businessUnitId = Convert.ToInt32(_bu);
+        }
+        var _modelId = 0;
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("id", out var _id))
+        {
+            _modelId = Convert.ToInt32(_id);
+        }
+        var _modelCode = "";
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("code", out var _code))
+        {
+            _modelCode = _code;
+        }
+        StaticData.MenuItemList = StaticData.GetMenuItemList(PageData.Menu, gridReadOnly);
+        PageData.SetSelectedBusinessUnit(_businessUnitId);
+        await FillData();
+        AppState.IsLoading = false;
+    }
+
+    async Task FillData()
+    {
+        AppState.IsLoading = true;
+        var _modelList = await ModelService.GetAllAsync(PageData.SelectedBusinessUnit, false);
+        modelList = _modelList.Result.ToList();
+        AppState.IsLoading = false;
+    }
+
+    void AppStateInitialize()
+    {
+        AppState.OnBackClick += BackClick;
+        AppState.OnAddClick += AddClick;
+        AppState.OnEditClick += EditClick;
+        AppState.OnSaveClick += SaveClick;
+        AppState.OnDeleteClick += DeleteClick;
+        AppState.OnRefreshClick += RefreshClick;
+        AppState.OnReportsClick += ReportsClick;
+        AppState.OnAttachmentsClick += AttachmentsClick;
+        AppState.OnApproveClick += ApproveClick;
+        AppState.OnSuspendClick += SuspendClick;
+        AppState.OnRejectClick += RejectClick;
+        AppState.OnReportProblemClick += ReportProblemClick;
+        AppState.OnDocumentationClick += DocumentationClick;
+        AppState.OnDevModeClick += DevModeClick;
+        AppState.OnPropertiesClick += PropertiesClick;
+
+        AppState.IsBackVisible = true;
+        AppState.IsBackDisabled = false;
+        AppState.IsAddVisible = false;
+        AppState.IsAddDisabled = (!PageData.Menu.CreateAccess);
+        AppState.IsEditVisible = false;
+        AppState.IsEditDisabled = (!PageData.Menu.UpdateAccess);
+        AppState.IsSaveVisible = false;
+        AppState.IsSaveDisabled = false;
+        AppState.IsDeleteVisible = false;
+        AppState.IsDeleteDisabled = (!PageData.Menu.DeleteAccess); ;
+        AppState.IsRefreshVisible = true;
+        AppState.IsRefreshDisabled = false;
+        AppState.IsReportsVisible = true;
+        AppState.IsReportsDisabled = false;
+        AppState.IsAttachmentsVisible = true;
+        AppState.IsAttachmentsDisabled = false;
+        AppState.IsApprovalVisible = false;
+        AppState.IsApproveVisible = true;
+        AppState.IsApproveDisabled = false;
+        AppState.IsSuspendVisible = true;
+        AppState.IsSuspendDisabled = false;
+        AppState.IsRejectVisible = true;
+        AppState.IsRejectDisabled = false;
+        AppState.IsReportProblemVisible = true;
+        AppState.IsReportProblemDisabled = false;
+        AppState.IsDocumentationVisible = true;
+        AppState.IsDocumentationDisabled = false;
+        AppState.IsDevModeVisible = true;
+        AppState.IsDevModeDisabled = false;
+        AppState.IsPropertiesVisible = true;
+        AppState.IsPropertiesDisabled = false;
+    }
+
+    void IDisposable.Dispose()
+    {
+        AppState.OnBackClick -= BackClick;
+        AppState.OnAddClick -= AddClick;
+        AppState.OnEditClick -= EditClick;
+        AppState.OnSaveClick -= SaveClick;
+        AppState.OnDeleteClick -= DeleteClick;
+        AppState.OnRefreshClick -= RefreshClick;
+        AppState.OnReportsClick -= ReportsClick;
+        AppState.OnAttachmentsClick -= AttachmentsClick;
+        AppState.OnApproveClick -= ApproveClick;
+        AppState.OnSuspendClick -= SuspendClick;
+        AppState.OnRejectClick -= RejectClick;
+        AppState.OnReportProblemClick -= ReportProblemClick;
+        AppState.OnDocumentationClick -= DocumentationClick;
+        AppState.OnDevModeClick -= DevModeClick;
+        AppState.OnPropertiesClick -= PropertiesClick;
+    }
+
+    void ShowProperties(PropertiesData propertiesData)
+    {
+        AppState.PropertiesData = propertiesData;
+    }
+
+    void BackClick()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+
+    void AddClick()
+    {
+    //
+    }
+
+    void EditClick()
+    {
+    //
+    }
+
+    void SaveClick()
+    {
+    //
+    }
+
+    void DeleteClick()
+    {
+    //
+    }
+
+    async void RefreshClick()
+    {
+        await FillData();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    void ReportsClick()
+    {
+    //
+    }
+
+    void AttachmentsClick()
+    {
+    //
+    }
+
+    void ApproveClick()
+    {
+    //
+    }
+
+    void SuspendClick()
+    {
+    //
+    }
+
+    void RejectClick()
+    {
+    //
+    }
+
+    void ReportProblemClick()
+    {
+    //
+    }
+
+    void DocumentationClick()
+    {
+    //
+    }
+
+    void DevModeClick()
+    {
+        devMode = !devMode;
+        StateHasChanged();
+    }
+
+    void PropertiesClick()
+    {
+    //
+    }
+
+    void OnRowClickHandler(GridRowClickEventArgs args)
+    {
+    //
+    }
+
+    void OnRowDoubleClickHandler(GridRowClickEventArgs args)
+    {
+        var argsItem = args.Item as Model;
+        GoToDetails(argsItem.Id);
+    }
+
+    void GoToDetails(int id)
+    {
+        NavigationManager.NavigateTo($"/usercard?id={id}");
+    }
+
+    async Task BusinessUnitChanged(BusinessUnit businessUnit)
+    {
+        PageData.SelectedBusinessUnit = businessUnit;
+        await FillData();
+    }
+
+    void ExportToExcel()
+    {
+        ModelService.ExportToExcel(modelList);
+    }
+
+    // Grid CRUD events - end
+
+
+
+}
+
+<style>
+    .active-color {
+        color: #00c600;
+    }
+
+    .inactive-color {
+        color: #424242;
+    }
+
+</style>

@@ -1,0 +1,16 @@
+﻿<div class="page-container">
+        @ChildContent
+    </div>
+
+
+@code {
+    [Parameter] public RenderFragment ChildContent { get; set; }
+
+}
+
+
+<style>
+    .page-container {
+        padding: 16px 16px 8px 16px;
+    }
+</style>

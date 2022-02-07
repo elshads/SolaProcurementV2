@@ -1,0 +1,61 @@
+﻿@typeparam TItem where TItem : SystemModel, new()
+
+
+<TelerikDropDownList Id="@Id" Data="@Data" Value="@selectedValueId" ValueChanged="@((int e) => OnValueChanged(e))" ValueField="@ValueField" TextField="@TextField"
+                 Class="@Class" Width="@Width" PopupWidth="@PopupWidth" Enabled="@Enabled"
+                 Filterable="false">
+        <HeaderTemplate>
+        <div class="combo-header-row">
+            @if (ShowId)
+            {
+                <span class="cell-id">Id</span>
+            }
+            <span class="cell-code">Code</span>
+            <span class="cell-name">Name</span>
+        </div>
+    </HeaderTemplate>
+    <ItemTemplate Context="comboContext">
+        <div class="combo-item-row">
+            @if (ShowId)
+            {
+                <span class="cell-id">@comboContext.Id</span>
+            }
+            <span class="cell-code">@comboContext.Code</span>
+            <span class="cell-name">@comboContext.Name</span>
+        </div>
+    </ItemTemplate>
+    </TelerikDropDownList>
+
+@code {
+    [Parameter] public IEnumerable<TItem> Data { get; set; } = new List<TItem>();
+    [Parameter] public TItem Value { get; set; } = new();
+    [Parameter] public EventCallback<TItem> ValueChanged { get; set; }
+    [Parameter] public string ValueField { get; set; } = "Id";
+    [Parameter] public string TextField { get; set; } = "Code";
+    [Parameter] public string Width { get; set; } = "200px";
+    [Parameter] public string PopupWidth { get; set; } = "";
+    [Parameter] public string Class { get; set; } = "";
+    [Parameter] public bool Filterable { get; set; } = false;
+    [Parameter] public bool Enabled { get; set; } = true;
+    [Parameter] public bool ShowId { get; set; } = false;
+    [Parameter] public string Id { get; set; } = "";
+
+
+    int selectedValueId { get { return Value != null ? Value.Id : 0; } set { Value = (value > 0 ? Data.FirstOrDefault(e => e.Id == value) : new()); } }
+
+    protected override void OnInitialized()
+    {
+        //
+    }
+
+    async Task OnValueChanged()
+    {
+        await ValueChanged.InvokeAsync(Value);
+    }
+
+    async Task OnValueChanged(int valueId)
+    {
+        selectedValueId = valueId;
+        await OnValueChanged();
+    }
+}

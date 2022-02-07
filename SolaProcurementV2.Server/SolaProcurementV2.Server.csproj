@@ -1,0 +1,49 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<Nullable>disable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<UserSecretsId>aspnet-SolaProcurementV2.Server-E470DEFB-C718-4CD5-A559-9742467633FA</UserSecretsId>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <None Remove="Pages\UserCard.razor~RF2b9ac705.TMP" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Blazored.FluentValidation" Version="2.0.3" />
+		<PackageReference Include="Blazored.LocalStorage" Version="4.2.0" />
+		<PackageReference Include="Dapper" Version="2.0.123" />
+		<PackageReference Include="EPPlus" Version="5.8.6" />
+		<PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="6.0.1" />
+		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="6.0.1" />
+		<PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="6.0.1" />
+		<PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.1" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="6.0.1">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="6.0.1" />
+		<PackageReference Include="MudBlazor" Version="6.0.6" />
+		<PackageReference Include="Telerik.UI.for.Blazor" Version="3.0.0" />
+		<Using Include="SolaProcurementV2.Server.Configurations" />
+		<Using Include="SolaProcurementV2.Server.Data" />
+		<Using Include="SolaProcurementV2.Server.DataModel" />
+		<Using Include="SolaProcurementV2.Server.DataService" />
+		<Using Include="SolaProcurementV2.Server.DataValidator" />
+		<Using Include="SolaProcurementV2.Server.Identity" />
+		<Using Include="SolaProcurementV2.Server.ComponentConfigurations" />
+		<Using Include="Dapper" />
+		<Using Include="Microsoft.Data.SqlClient" />
+		<Using Include="MudBlazor" />
+		<Using Include="OfficeOpenXml" />
+		<Using Include="FluentValidation" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Folder Include="wwwroot\js\" />
+	</ItemGroup>
+
+</Project>

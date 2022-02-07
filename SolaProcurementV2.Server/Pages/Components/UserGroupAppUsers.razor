@@ -1,0 +1,147 @@
+﻿@using Model = AppUser
+@inject AppUserService ModelService
+
+<FlexBox>
+    <FlexColumn ColSpan="6" MarginRight="8">
+        <TelerikGrid @ref="@gridRefGroupModel" @key="@gridKeyGroupModel" Data="@Data" Height="@Height"
+                     Pageable="false" Sortable="true" Navigable="true" Groupable="false"
+                     FilterMode="@GridFilterMode.None" ShowColumnMenu="false" Resizable="true"
+                     SelectionMode="GridSelectionMode.Multiple" @bind-SelectedItems="@selectedGroupModelList"
+                     OnRowDoubleClick="@(e => RowDoubleClickGroupModel((e.Item as Model)))">
+            <GridToolBar>
+                <GridCommandButton Icon="arrow-right" Enabled="@(Enabled && selectedGroupModelList.Count() > 0)" OnClick="@(e => MoveGroupModel((e.Item as Model), true))">Remove from Group</GridCommandButton>
+            </GridToolBar>
+            <GridColumns>
+                <GridCommandColumn ShowColumnMenu="false" Reorderable="false" Width="55px" Visible="true">
+                    <GridCommandButton Icon="arrow-right" ShowInEdit="false" Enabled="@Enabled" OnClick="@(e => MoveGroupModel((e.Item as Model), false))" />
+                </GridCommandColumn>
+                <GridCheckboxColumn ShowColumnMenu="false" Reorderable="false" Width="42px" />
+                <GridColumn Field="@(nameof(Model.RowIndex))" Title="Index" Width="70px" Editable="false" Groupable="false" Filterable="false" TextAlign="ColumnTextAlign.Right" Visible="false" />
+                <GridColumn Field="@(nameof(Model.UserName))" Title="UserName" />
+                <GridColumn Field="@(nameof(Model.FullName))" Title="Full Name" />
+                <GridColumn Field="@(nameof(Model.Description))" Title="Description" />
+                <GridColumn Field="@(nameof(Model.StatusId))" Title="Status" Width="80px"/>
+            </GridColumns>
+        </TelerikGrid>
+    </FlexColumn>
+
+
+    <FlexColumn ColSpan="6" MarginLeft="8">
+        <TelerikGrid @ref="@gridRefModel" @key="@gridKeyModel" Data="@modelList" Height="@Height"
+                     Pageable="false" Sortable="true" Navigable="true" Groupable="false"
+                     FilterMode="@GridFilterMode.None" ShowColumnMenu="false" Resizable="true"
+                     SelectionMode="GridSelectionMode.Multiple" @bind-SelectedItems="@selectedModelList"
+                     OnRowDoubleClick="@(e => RowDoubleClickModel((e.Item as Model)))">
+            <GridToolBar>
+                <GridCommandButton Icon="arrow-left" Enabled="@(Enabled && selectedModelList.Count() > 0)" OnClick="@(e => MoveModel((e.Item as Model), true))">Add to Group</GridCommandButton>
+            </GridToolBar>
+            <GridColumns>
+                <GridCommandColumn ShowColumnMenu="false" Reorderable="false" Width="55px" Visible="true">
+                    <GridCommandButton Icon="arrow-left" ShowInEdit="false" Enabled="@Enabled" OnClick="@(e => MoveModel((e.Item as Model), false))" />
+                </GridCommandColumn>
+                <GridCheckboxColumn ShowColumnMenu="false" Reorderable="false" Width="42px" />
+                <GridColumn Field="@(nameof(Model.RowIndex))" Title="Index" Width="70px" Editable="false" Groupable="false" Filterable="false" TextAlign="ColumnTextAlign.Right" Visible="false" />
+                <GridColumn Field="@(nameof(Model.UserName))" Title="UserName" />
+                <GridColumn Field="@(nameof(Model.FullName))" Title="Full Name" />
+                <GridColumn Field="@(nameof(Model.Description))" Title="Description" />
+                <GridColumn Field="@(nameof(Model.StatusId))" Title="Status" Width="80px"/>
+            </GridColumns>
+        </TelerikGrid>
+    </FlexColumn>
+</FlexBox>
+
+@code {
+    [CascadingParameter] public AppState AppState { get; set; }
+
+    [Parameter] public bool Enabled { get; set; } = true;
+    [Parameter] public string Height { get; set; } = "calc(100vh - 285px)";
+    [Parameter] public List<Model> Data { get; set; } = new List<Model>();
+    [Parameter] public EventCallback<List<Model>> DataChanged { get; set; }
+
+
+    TelerikGrid<Model> gridRefGroupModel;
+    TelerikGrid<Model> gridRefModel;
+
+    Guid gridKeyGroupModel;
+    Guid gridKeyModel;
+
+    IEnumerable<Model> selectedGroupModelList = new List<Model>();
+    IEnumerable<Model> selectedModelList = new List<Model>();
+    List<Model> modelList = new List<Model>();
+    List<Model> _modelList = new List<Model>();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var _ml = await ModelService.GetAll(SessionData.SessionUser.Id, false);
+        _modelList = _ml.Result.ToList();
+    }
+
+    protected override void OnParametersSet()
+    {
+        modelList = _modelList;
+        if (Data != null && Data.Count() > 0)
+        {
+            modelList = _modelList.Where(e => !Data.Select(m => m.Id).Contains(e.Id)).ToList();
+        }
+    }
+
+    async Task RowDoubleClickGroupModel(Model argsItem)
+    {
+        if (Enabled)
+        {
+            await MoveGroupModel(argsItem, false);
+        }
+    }
+
+    async Task RowDoubleClickModel(Model argsItem)
+    {
+        if (Enabled)
+        {
+            await MoveModel(argsItem, false);
+        }
+    }
+
+    async Task MoveGroupModel(Model argsItem, bool multiple)
+    {
+        if (!multiple && argsItem != null)
+        {
+            Data.Remove(argsItem);
+            modelList.Add(argsItem);
+        }
+        else if (multiple && selectedGroupModelList.Count() > 0)
+        {
+            foreach (var item in selectedGroupModelList)
+            {
+                Data.Remove(item);
+                modelList.Add(item);
+            }
+        }
+        selectedGroupModelList = new List<Model>();
+        await DataChanged.InvokeAsync(Data);
+        gridKeyGroupModel = Guid.NewGuid();
+        gridKeyModel = Guid.NewGuid();
+    }
+
+    async Task MoveModel(Model argsItem, bool multiple)
+    {
+        if (!multiple && argsItem != null)
+        {
+            modelList.Remove(argsItem);
+            Data.Add(argsItem);
+        }
+        else if (multiple && selectedModelList.Count() > 0)
+        {
+            foreach (var item in selectedModelList)
+            {
+                modelList.Remove(item);
+                Data.Add(item);
+            }
+        }
+        selectedModelList = new List<Model>();
+        await DataChanged.InvokeAsync(Data);
+        gridKeyGroupModel = Guid.NewGuid();
+        gridKeyModel = Guid.NewGuid();
+    }
+
+}

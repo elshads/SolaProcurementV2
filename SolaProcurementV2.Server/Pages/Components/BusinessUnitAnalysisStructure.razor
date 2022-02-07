@@ -1,0 +1,62 @@
+﻿@inject AnalysisStructureService ModelService
+@using Model = AnalysisStructure
+
+<div style=@Style>
+    <TelerikGrid @ref="@gridRef" @key="@gridKey" Data="@modelList"
+                 Sortable="true" Navigable="true"
+                 Resizable="true" Reorderable="true"
+                 SelectionMode="GridSelectionMode.None" Height="calc(100vh - 255px)">
+        <GridToolBar>
+            <div>Analysis Structure</div>
+        </GridToolBar>
+        <GridColumns>
+            <GridColumn Field="@(nameof(Model.RowIndex))" Title="Index" Width="70px" Editable="false" Groupable="false" Filterable="false" TextAlign="ColumnTextAlign.Right" Visible="false" />
+            <GridColumn Field="@(nameof(Model.Id))" Title="Id" Width="70px" Editable="false" TextAlign="ColumnTextAlign.Right" Visible="false" />
+            <GridColumn Field="@(nameof(Model.MenuName))" Title="Function" Width="170px" />
+            <GridColumn Field="@(nameof(Model.AnalysisDimensionCode01))" Title="01" OnCellRender="@(e => e.Class = "txt-center")" />
+            <GridColumn Field="@(nameof(Model.AnalysisDimensionCode02))" Title="02" OnCellRender="@(e => e.Class = "txt-center")" />
+            <GridColumn Field="@(nameof(Model.AnalysisDimensionCode03))" Title="03" OnCellRender="@(e => e.Class = "txt-center")" />
+            <GridColumn Field="@(nameof(Model.AnalysisDimensionCode04))" Title="04" OnCellRender="@(e => e.Class = "txt-center")" />
+            <GridColumn Field="@(nameof(Model.AnalysisDimensionCode05))" Title="05" OnCellRender="@(e => e.Class = "txt-center")" />
+            <GridColumn Field="@(nameof(Model.AnalysisDimensionCode06))" Title="06" OnCellRender="@(e => e.Class = "txt-center")" />
+            <GridColumn Field="@(nameof(Model.AnalysisDimensionCode07))" Title="07" OnCellRender="@(e => e.Class = "txt-center")" />
+            <GridColumn Field="@(nameof(Model.AnalysisDimensionCode08))" Title="08" OnCellRender="@(e => e.Class = "txt-center")" />
+            <GridColumn Field="@(nameof(Model.AnalysisDimensionCode09))" Title="09" OnCellRender="@(e => e.Class = "txt-center")" />
+            <GridColumn Field="@(nameof(Model.AnalysisDimensionCode10))" Title="10" OnCellRender="@(e => e.Class = "txt-center")" />
+        </GridColumns>
+    </TelerikGrid>
+</div>
+
+
+@code {
+    [CascadingParameter] public AppState AppState { get; set; }
+    [CascadingParameter] public DialogFactory Dialogs { get; set; }
+
+    [Parameter] public BusinessUnit BusinessUnit { get; set; }
+    [Parameter] public string Style { get; set; }
+
+    // Grid specific variables - start
+    IEnumerable<Model> modelList = new List<Model>();
+    Model currentModel;
+
+    Guid gridKey;
+    TelerikGrid<Model> gridRef;
+    // Grid specific variables - end
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var _modelList = await ModelService.GetAllAsync(BusinessUnit, true);
+        modelList = _modelList.Result;
+    }
+}
+
+<style>
+    .active-color {
+        color: #00c600;
+    }
+
+    .inactive-color {
+        color: #424242;
+    }
+
+</style>
